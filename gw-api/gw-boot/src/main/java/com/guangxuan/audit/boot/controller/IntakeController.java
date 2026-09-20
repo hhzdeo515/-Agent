@@ -42,6 +42,7 @@ public class IntakeController {
     private final RiskAppService riskAppService;
     private final ParseAppService parseAppService;
     private final MaterialMapper materialMapper;
+    private final com.guangxuan.audit.infra.storage.StorageService storageService;
 
     // ── 创建审核任务 ────────────────────────────────────────────────────
 
@@ -59,6 +60,100 @@ public class IntakeController {
     }
 
     // ── 上传物料 ────────────────────────────────────────────────────────
+
+    /**
+     * 真实上传通道：接收文件本体，存入 MinIO，并登记物料版本。
+     *
+     * <p>这是给前端文件选择器与拖拽上传用的端点。流程：
+     * <ol>
+     *   <li>把文件字节写入对象存储（对象键含 sha256，物理上不可覆盖）；</li>
+     *   <li>登记 {@code material_version}（同哈希自动复用，保证重复上传幂等）。</li>
+     * </ol>
+     *
+     * <p>物料类型由文件的实际内容/扩展名推断，<b>不信任前端声明</b>——
+     * 上传者声明成什么类型就按什么类型审核，是可以被绕过的。
+     */
+    @PostMapping(value = "/materials/upload", consumes = "multipart/form-data")
+    @PreAuthorize("@perm.has('case.upload')")
+    public Result<Map<String, Object>> uploadFile(Actor actor,
+                                                  @RequestParam("caseId") Long caseId,
+                                                  @RequestParam(value = "materialId", required = false) Long materialId,
+                                                  @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+                                                  @RequestParam(value = "uploadReason", required = false) String uploadReason) {
+        if (file == null || file.isEmpty()) {
+            throw new com.guangxuan.audit.common.error.DomainException(
+                    com.guangxuan.audit.common.error.ErrorCode.VALIDATION_FAILED, "请选择要上传的文件");
+        }
+
+        String originalName = file.getOriginalFilename();
+        MaterialType type = detectType(originalName, file.getContentType());
+
+        try {
+            // 先建物料壳（materialId 为空时）以拿到 id 用于对象键
+            Long mid = materialId;
+            if (mid == null) {
+                MaterialEntity shell = new MaterialEntity();
+                shell.setCaseId(caseId);
+                shell.setName(originalName);
+                shell.setMaterialType(type.name());
+                shell.setParseStatus(ParseStatus.PENDING.name());
+                materialMapper.insert(shell);
+                mid = shell.getId();
+            }
+
+            // 第 1 步：存文件
+            com.guangxuan.audit.infra.storage.StorageService.UploadedFile stored =
+                    storageService.put(caseId, mid, "tmp", originalName, file.getBytes(), file.getContentType());
+
+            // 第 2 步：登记版本（内部按 sha256 幂等）
+            MaterialVersionEntity v = intakeAppService.uploadVersion(actor, caseId, mid,
+                    originalName, type, stored.objectKey(), stored.sha256(), stored.size(),
+                    file.getContentType(), uploadReason);
+
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("materialId", v.getMaterialId());
+            out.put("versionId", v.getId());
+            out.put("versionLabel", v.getVersionLabel());
+            out.put("fileSha256", v.getFileSha256());
+            out.put("fileSize", v.getFileSize());
+            out.put("materialType", type.name());
+            out.put("objectKey", v.getFileObjectKey());
+            return Result.ok(out);
+        } catch (java.io.IOException e) {
+            throw new com.guangxuan.audit.common.error.DomainException(
+                    com.guangxuan.audit.common.error.ErrorCode.STORAGE_ERROR, "读取上传文件失败");
+        }
+    }
+
+    /** 按扩展名与 MIME 推断物料类型；无法识别时拒绝，而不是当成未知类型放过 */
+    private MaterialType detectType(String fileName, String contentType) {
+        String n = fileName == null ? "" : fileName.toLowerCase();
+        if (n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png")
+                || n.endsWith(".gif") || n.endsWith(".webp") || n.endsWith(".bmp")) {
+            return MaterialType.IMAGE;
+        }
+        if (n.endsWith(".mp4") || n.endsWith(".mov") || n.endsWith(".avi")
+                || n.endsWith(".mkv") || n.endsWith(".webm")) {
+            return MaterialType.VIDEO;
+        }
+        if (n.endsWith(".pptx") || n.endsWith(".ppt")) {
+            return MaterialType.PPT;
+        }
+        if (n.endsWith(".pdf")) {
+            return MaterialType.PDF;
+        }
+        if (n.endsWith(".docx") || n.endsWith(".doc")) {
+            return MaterialType.WORD;
+        }
+        if (n.endsWith(".txt") || n.endsWith(".md") || n.endsWith(".csv")
+                || (contentType != null && contentType.startsWith("text/"))) {
+            return MaterialType.TEXT;
+        }
+        throw new com.guangxuan.audit.common.error.DomainException(
+                com.guangxuan.audit.common.error.ErrorCode.UNSUPPORTED_FILE_TYPE,
+                "无法识别的文件类型：" + fileName
+                        + "。支持 图片 / 视频 / PPT / PDF / Word / 纯文本");
+    }
 
     public record UploadRequest(@NotNull Long caseId,
                                 Long materialId,

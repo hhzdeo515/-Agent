@@ -9,6 +9,46 @@
 import { ref } from 'vue'
 import ConversationThread, { type Message } from '@/components/ConversationThread.vue'
 import PanelCard from '@/components/PanelCard.vue'
+import FileDropzone from '@/components/FileDropzone.vue'
+
+/**
+ * 当前任务的 id。
+ *
+ * 真实环境应从路由参数或任务列表进入；这里为了能直接演示上传与解析链路，
+ * 用一个 ref 承载，并由「新建任务」动作写入真实 id。
+ */
+const caseId = ref<number | null>(null)
+/** 上传并解析成功的物料数，用于侧栏进度 */
+const uploadedCount = ref(0)
+
+function onUploaded() {
+  uploadedCount.value += 1
+}
+
+async function createCase() {
+  const { apiPost } = await import('@/api/client')
+  try {
+    const c = await apiPost<{ id: number; caseNo: string }>('/api/intake/cases', {
+      projectId: 1,
+      name: '新一批宣传物料审核',
+    })
+    caseId.value = c.id
+    messages.value.push({
+      id: 'sys' + Date.now(),
+      role: 'agent',
+      text: `任务已建立：${c.caseNo}。现在可以上传材料了。`,
+      time: new Date().toTimeString().slice(0, 5),
+    })
+  } catch (e) {
+    messages.value.push({
+      id: 'err' + Date.now(),
+      role: 'agent',
+      text: '创建任务失败：' + (e instanceof Error ? e.message : '未知错误'),
+      time: new Date().toTimeString().slice(0, 5),
+      tone: 'warning',
+    })
+  }
+}
 
 const messages = ref<Message[]>([
   {
@@ -107,6 +147,20 @@ const requirements = [
 
 <template>
   <div class="view">
+    <!-- 正式物料的上传通道：文件会存入对象存储、建立不可覆盖的版本并触发解析 -->
+    <section class="intake-upload">
+      <div class="intake-upload__head">
+        <h2 class="intake-upload__title">材料接收</h2>
+        <button v-if="!caseId" class="gw-btn gw-btn--primary" type="button" @click="createCase">
+          新建审核任务
+        </button>
+        <span v-else class="gw-status gw-status--ink">
+          <span class="gw-status__dot" />任务 #{{ caseId }} · 已上传 {{ uploadedCount }} 份
+        </span>
+      </div>
+      <FileDropzone :case-id="caseId" @uploaded="onUploaded" />
+    </section>
+
     <ConversationThread :messages="messages" />
 
     <Teleport defer to="#wb-aside">
@@ -174,6 +228,27 @@ const requirements = [
 <style scoped>
 .view {
   display: contents;
+}
+
+/* ── 材料接收区 ───────────────────────────────────────────────────── */
+.intake-upload {
+  max-width: 920px;
+  margin-bottom: var(--gw-s7);
+}
+
+.intake-upload__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-s4);
+  margin-bottom: var(--gw-s4);
+}
+
+.intake-upload__title {
+  font-size: var(--gw-fs-md);
+  font-weight: 600;
+  color: var(--gw-text);
+  letter-spacing: -0.01em;
 }
 
 /* ── 键值对 ───────────────────────────────────────────────────────── */

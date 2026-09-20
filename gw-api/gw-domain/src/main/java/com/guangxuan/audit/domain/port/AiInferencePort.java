@@ -43,6 +43,59 @@ public interface AiInferencePort {
     /** 生成面向业务方的沟通话术（AGENTS.md 第 6 条） */
     String generateCommunicationScript(ScriptRequest request);
 
+    /**
+     * AI 法务助手：单条咨询（AGENTS.md 第 3 条）。
+     *
+     * <p>与上面的正式审核链路的区别：这里回答的是「这一句话有没有问题」这类零散问题，
+     * 产出的是<b>咨询结论</b>而非 Risk Case。
+     *
+     * <p>实现必须遵守两条边界：
+     * <ul>
+     *   <li>没有充分依据时明确说明不确定性，不得虚构法条、案例、产品参数或证明材料；</li>
+     *   <li>涉及需要专业判断的情形，应建议转正式审核，而不是给出确定结论。</li>
+     * </ul>
+     *
+     * @return 自然语言回答 + 其中的风险点 + 推理过程（供前端展示"AI 是怎么想的"）
+     */
+    ConsultationAnswer consult(ConsultationRequest request);
+
+    /**
+     * @param question   用户输入（一句宣传语、一段文案，或一个法律问题）
+     * @param attachment 可选的临时附件（图片/文档的已提取文本）；助手不接收正式物料
+     */
+    record ConsultationRequest(String question, Attachment attachment) {
+    }
+
+    /** @param extractedText 已解析出的文本内容；空表示仅凭文件名无法分析 */
+    record Attachment(String name, String mimeType, String extractedText) {
+    }
+
+    /**
+     * @param reply 自然语言回答
+     * @param risks 回答中涉及的风险点（可为空，例如用户只是问一个法律概念）
+     * @param trace 推理过程，前端折叠展示
+     * @param needsFormalReview 是否建议转正式审核
+     */
+    record ConsultationAnswer(String reply, List<RiskDraft> risks, List<TraceStep> trace,
+                              boolean needsFormalReview) {
+        public ConsultationAnswer {
+            risks = risks == null ? List.of() : List.copyOf(risks);
+            trace = trace == null ? List.of() : List.copyOf(trace);
+        }
+    }
+
+    /**
+     * @param stage   阶段名，如「规则检索」
+     * @param summary 一句话结果
+     * @param details 关键细节
+     * @param costMs  耗时
+     */
+    record TraceStep(String stage, String summary, List<String> details, long costMs) {
+        public TraceStep {
+            details = details == null ? List.of() : List.copyOf(details);
+        }
+    }
+
     // ── 请求 DTO ────────────────────────────────────────────────────────
 
     /** @param anchorLines 锚点清单（ID + 文本），模型只能引用清单内的 ID */
