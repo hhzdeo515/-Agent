@@ -137,6 +137,8 @@ services:
       GW_AI_READ_TIMEOUT_MS: ${GW_AI_READ_TIMEOUT_MS:-120000}
       GW_AI_MAX_ATTEMPTS: ${GW_AI_MAX_ATTEMPTS:-3}
       GW_JWT_SECRET: ${GW_JWT_SECRET:-local-dev-secret-change-me-at-least-32-bytes}
+      # 敏感配置落库前的加密密钥；留空则从 JWT 密钥派生（可用，但轮换 JWT 会导致配置解不开）
+      GW_CONFIG_SECRET: ${GW_CONFIG_SECRET:-}
       GW_LOG_LEVEL: ${GW_LOG_LEVEL:-INFO}
     ports:
       - "${GW_APP_PORT:-8080}:8080"

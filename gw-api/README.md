@@ -129,12 +129,28 @@ gw-api/
 
 ### 启用千问
 
+两种方式，任选其一：
+
+**方式一：界面里配（推荐，改完立即生效，不用重启）**
+
+用具备 `admin.config` 权限的账号登录 → 左下角头像 → **设置 → AI 调用** →
+填 API Key、选供应商 `dashscope`、按需调整模型型号 → 保存。
+配置落 `sys_config` 表，**敏感值 AES-GCM 加密存储，接口只回掩码**。
+
+**方式二：环境变量**
+
 ```bash
 cd deploy
 cp .env.example .env
 # 编辑 .env：填 DASHSCOPE_API_KEY，并把 GW_AI_PROVIDER 改成 dashscope
 docker compose up -d
 ```
+
+优先级：**数据库配置 > 环境变量**。环境变量相当于"出厂默认值"，
+在设置里清除某项配置即回落到它。
+
+> 供应商切换是**运行时**生效的（两套实现常驻，由 `RoutingAiInferenceAdapter` /
+> `RoutingParseAdapter` 按当前配置分派），因此不需要重启容器。
 
 启动后 `GET /api/ai/status` 会如实报告当前生效的供应商、模型型号，以及
 **哪些能力可用、哪些还没有**（详见第五节第 10 条）。
@@ -221,6 +237,13 @@ docker compose up -d
 15. **"没检索到"与"检索不可用"必须分开**。前者意味着确实没有依据（可以判定为待人工判断），
     后者意味着这次没查成（应当回落而不是下结论）。`RetrievalPort.available()` 就是为此存在——
     把一次网络抖动变成一批风险"无依据"，是这条链路上最容易发生的静默错误。
+16. **敏感配置加密，且永不回显**。API Key 存 `sys_config` 时是 AES-GCM 密文，
+    接口只返回掩码，日志只记键名。密钥优先取 `GW_CONFIG_SECRET`，
+    未配置则从 `GW_JWT_SECRET` 派生并 WARN——**不自动生成随机密钥**：
+    那会导致重启后配置全部解不开，表现为"配置莫名消失"，比启动失败难查得多。
+17. **清除配置必须用 UpdateWrapper 显式 `set`**。MyBatis-Plus 默认的字段策略会
+    忽略 `null` 字段，用 `updateById` 把值设为 null 是一次**静默的空操作**——
+    界面上显示"已清除"，数据库里旧值还在，重启后又回来了。这个坑踩过一次。
 
 ## 六、验证记录
 
