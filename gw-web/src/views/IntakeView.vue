@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * tast · 任务调度（接收区）
+ * 接收区（正式审核流程入口）
  *
  * 责任：审核任务的创建、材料接收、解析调度与审核要求。
  * 边界：本模块只把任务与材料规范地送入审核系统，
@@ -109,7 +109,7 @@ const requirements = [
   <div class="view">
     <ConversationThread :messages="messages" />
 
-    <Teleport to="#wb-aside">
+    <Teleport defer to="#wb-aside">
       <!-- 任务信息 -->
       <PanelCard title="任务信息" hint="GX-20260920-0001">
         <dl class="kv">

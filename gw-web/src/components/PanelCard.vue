@@ -1,9 +1,12 @@
 <script setup lang="ts">
 /**
- * 右栏面板卡片：统一的标题栏 + 细分割线 + 内容区。
+ * 右栏面板卡片：统一的标题栏 + 细分隔线 + 内容区。
  *
  * 三个模块的右栏内容差异很大，但都复用这一个壳，
  * 保证「模块可区分、整体视觉统一」——差异只体现在点缀色与内容，不体现在结构。
+ *
+ * 视觉细节：标题栏用极淡的点缀色底 + 一个 2px 的点缀色标识条，
+ * 使右栏在滚动时也能快速定位分区，而不需要加粗边框或大标题。
  */
 defineProps<{
   title: string
@@ -17,6 +20,7 @@ defineProps<{
 <template>
   <section class="pc">
     <header class="pc__head">
+      <span class="pc__mark" aria-hidden="true" />
       <h2 class="pc__title">{{ title }}</h2>
       <span v-if="hint" class="pc__hint">{{ hint }}</span>
       <slot name="head-extra" />
@@ -29,7 +33,8 @@ defineProps<{
 
 <style scoped>
 .pc {
-  border-bottom: 1px solid var(--gw-line);
+  position: relative;
+  border-bottom: 1px solid var(--gw-line-soft);
 }
 
 .pc:last-child {
@@ -37,10 +42,26 @@ defineProps<{
 }
 
 .pc__head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--gw-s3);
   padding: var(--gw-s4) var(--gw-s5) var(--gw-s3);
+  /* 半透明底 + 模糊：滚动时内容从标题下滑过而不打架 */
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+}
+
+/* 点缀色标识条：2px 宽，短，克制但足以定位 */
+.pc__mark {
+  width: 2px;
+  height: 12px;
+  flex: none;
+  border-radius: var(--gw-r-pill);
+  background: var(--gw-accent);
+  opacity: 0.85;
 }
 
 .pc__title {
@@ -57,6 +78,9 @@ defineProps<{
   font-variant-numeric: tabular-nums;
   margin-left: auto;
   flex: none;
+  padding: 1px 6px;
+  border-radius: var(--gw-r-pill);
+  background: var(--gw-bg-sunken);
 }
 
 .pc__body {

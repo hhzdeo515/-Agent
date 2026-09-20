@@ -46,6 +46,7 @@ const meta = computed(() => MODULE_MAP[props.moduleKey])
 
 <style scoped>
 .wb {
+  position: relative;
   display: grid;
   grid-template-columns: var(--gw-nav-w) minmax(0, 1fr) var(--gw-aside-w);
   height: 100vh;
@@ -53,20 +54,36 @@ const meta = computed(() => MODULE_MAP[props.moduleKey])
   background: var(--gw-bg);
 }
 
+/* 环境光层：柔和漫射，暗示光源来自左上方。
+   没有它，大面积留白会显得"死平"；有了它，留白才有空间感。 */
+.wb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gw-ambient), var(--gw-ambient-accent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wb > * {
+  position: relative;
+  z-index: 1;
+}
+
 .wb__main {
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  /* 中间主区域：大面积留白 */
-  background: var(--gw-bg);
+  /* 中间主区域：大面积留白，背景由环境光层提供 */
+  background: transparent;
 }
 
 .wb__center {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--gw-s6) var(--gw-s7) var(--gw-s8);
+  padding: var(--gw-s6) var(--gw-s8) var(--gw-s9);
 }
 
 .wb__aside {
@@ -75,8 +92,10 @@ const meta = computed(() => MODULE_MAP[props.moduleKey])
   min-height: 0;
   overflow-y: auto;
   background: var(--gw-surface);
-  /* 用细分割线而非阴影分隔，保持界面干净 */
+  /* 左栏用细线，右栏用极淡阴影——不同性质的分隔用不同手段，
+     让右栏看起来是"浮在内容之上"而不是"被线切开" */
   border-left: 1px solid var(--gw-line);
+  box-shadow: -1px 0 0 rgba(27, 46, 51, 0.015), -8px 0 24px rgba(27, 46, 51, 0.02);
 }
 
 /* 窄屏：右栏收窄；更窄时隐藏右栏（内容仍可从中间区域进入） */

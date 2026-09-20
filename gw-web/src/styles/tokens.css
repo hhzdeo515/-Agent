@@ -46,6 +46,15 @@
   --gw-wine-100: #F0E2E3;
   --gw-wine-50: #F9F3F3;
 
+  /* ── 中性灰蓝（AI 法务助手：旁路入口，不抢正式流程的视觉重量）───── */
+  --gw-slate-700: #47555c;
+  --gw-slate-600: #56666c;
+  --gw-slate-500: #6b7a80;
+  --gw-slate-400: #8b989e;
+  --gw-slate-200: #d6dee1;
+  --gw-slate-100: #e8ecee;
+  --gw-slate-50: #f5f7f8;
+
   /* ── 中性色 ────────────────────────────────────────────────────── */
   --gw-bg: #f7f8f9; /* 干净背景 */
   --gw-bg-sunken: #f1f3f4;
@@ -93,6 +102,29 @@
   --gw-shadow-lg: 0 6px 20px rgba(27, 46, 51, 0.07), 0 2px 6px rgba(27, 46, 51, 0.03);
   --gw-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
+  /* ── 浮起层次 ────────────────────────────────────────────────────
+   * 单层阴影看起来是「贴纸」，双层阴影才像真实物体：近距离的接触阴影
+   * 提供边缘定义，远距离的大扩散阴影提供高度感。这是「不单调」的关键。 */
+  --gw-elev-1: 0 1px 1px rgba(27, 46, 51, 0.03), 0 2px 6px rgba(27, 46, 51, 0.04);
+  --gw-elev-2: 0 1px 2px rgba(27, 46, 51, 0.04), 0 4px 12px rgba(27, 46, 51, 0.05);
+  --gw-elev-3: 0 2px 4px rgba(27, 46, 51, 0.04), 0 8px 24px rgba(27, 46, 51, 0.06);
+  --gw-elev-4: 0 4px 8px rgba(27, 46, 51, 0.05), 0 16px 40px rgba(27, 46, 51, 0.07);
+
+  /* 内描边：在浅色背景上给出极细的边界，替代生硬边框 */
+  --gw-hairline: inset 0 0 0 1px rgba(27, 46, 51, 0.045);
+
+  /* ── 环境光：柔和漫射，暗示光源来自左上方（符合 2D 矢量 UI 的惯例）── */
+  --gw-ambient: radial-gradient(
+    120% 90% at 10% 0%,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0) 58%
+  );
+  --gw-ambient-accent: radial-gradient(
+    80% 60% at 88% 4%,
+    rgba(44, 74, 82, 0.03) 0%,
+    rgba(44, 74, 82, 0) 55%
+  );
+
   /* ── 间距：大面积留白 ──────────────────────────────────────────── */
   --gw-s1: 4px;
   --gw-s2: 8px;
@@ -134,9 +166,21 @@
 }
 
 /* ============================================================================
- * 模块点缀色：通过 data-module 切换，使三个模块视觉可区分但整体统一
+ * 模块点缀色：通过 data-module 切换，使四个模块视觉可区分但整体统一
+ *
+ * 分配依据（AGENTS.md 第 1、16 条的四模块划分）：
+ *   助手是「旁路」入口，用中性灰蓝，避免与三条正式流程抢视觉重量；
+ *   三条正式流程按推进顺序用墨青 → 哑光铜金 → 暗酒红。
  * ========================================================================== */
-[data-module='gasp'] {
+[data-module='assistant'] {
+  --gw-accent: var(--gw-slate-500);
+  --gw-accent-strong: var(--gw-slate-700);
+  --gw-accent-soft: var(--gw-slate-100);
+  --gw-accent-faint: var(--gw-slate-50);
+  --gw-accent-text: var(--gw-slate-700);
+}
+
+[data-module='intake'] {
   --gw-accent: var(--gw-ink-700);
   --gw-accent-strong: var(--gw-ink-800);
   --gw-accent-soft: var(--gw-ink-100);
@@ -144,7 +188,7 @@
   --gw-accent-text: var(--gw-ink-700);
 }
 
-[data-module='react'] {
+[data-module='feedback'] {
   --gw-accent: var(--gw-brass-500);
   --gw-accent-strong: var(--gw-brass-700);
   --gw-accent-soft: var(--gw-brass-100);
@@ -152,7 +196,7 @@
   --gw-accent-text: var(--gw-brass-800);
 }
 
-[data-module='tast'] {
+[data-module='finalReview'] {
   --gw-accent: var(--gw-wine-500);
   --gw-accent-strong: var(--gw-wine-700);
   --gw-accent-soft: var(--gw-wine-100);

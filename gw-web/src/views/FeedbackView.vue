@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * GASP · 信息研判（反馈区）
+ * 反馈区（第一次 AI 全量初审）
  *
  * 责任：一批材料的第一次 AI 全量初审 —— 发现风险、分类风险、定位风险。
  * 边界：不管 V1/V2/V3 整改版本、不做 Diff、不做审批与关闭。
@@ -103,7 +103,7 @@ const statusOf = (t: RiskRow['statusTone']) => `gw-status gw-status--${t}`
   <div class="view">
     <ConversationThread :messages="messages" />
 
-    <Teleport to="#wb-aside">
+    <Teleport defer to="#wb-aside">
       <!-- 三分类：口径与后端视图一致，不在前端重算 -->
       <PanelCard title="初审三分类" hint="10 份">
         <div class="gw-stats">

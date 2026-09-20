@@ -63,8 +63,8 @@ const initials = computed(() => user.name.slice(0, 1))
           >
             <span class="nav__accent" aria-hidden="true" />
             <span class="nav__item-body">
-              <span class="nav__item-code">{{ m.code }}</span>
               <span class="nav__item-name">{{ m.name }}</span>
+              <span class="nav__item-role">{{ m.role }}</span>
             </span>
           </RouterLink>
         </li>
@@ -207,20 +207,21 @@ const initials = computed(() => user.name.slice(0, 1))
   min-width: 0;
 }
 
-.nav__item-code {
+.nav__item-name {
   font-size: var(--gw-fs-md);
   font-weight: 600;
   letter-spacing: 0.01em;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
-.nav__item-name {
-  font-size: var(--gw-fs-sm);
+.nav__item-role {
+  font-size: var(--gw-fs-xs);
   color: var(--gw-text-tertiary);
-  line-height: 1.35;
+  line-height: 1.4;
+  margin-top: 1px;
 }
 
-.nav__item.is-active .nav__item-name {
+.nav__item.is-active .nav__item-role {
   color: var(--gw-text-secondary);
 }
 

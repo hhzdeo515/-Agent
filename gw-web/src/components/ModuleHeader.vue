@@ -18,11 +18,10 @@ defineProps<{
 <template>
   <header class="mh">
     <div class="mh__identity">
-      <span class="mh__code">{{ meta.code }}</span>
-      <span class="mh__sep" aria-hidden="true" />
+      <span class="mh__badge" aria-hidden="true" />
       <div class="mh__text">
         <h1 class="mh__name">{{ meta.name }}</h1>
-        <p class="mh__business">{{ meta.business }}</p>
+        <p class="mh__business">{{ meta.role }}</p>
       </div>
     </div>
 
@@ -56,13 +55,27 @@ defineProps<{
   min-width: 0;
 }
 
-/* 模块主标识：用点缀色，让三个模块一眼可辨 */
-.mh__code {
-  font-size: var(--gw-fs-lg);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--gw-accent-strong);
-  line-height: 1;
+/* 模块标识：一块点缀色方块 + 内部高光点，2D 矢量风格，不用 logo 图片 */
+.mh__badge {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--gw-r-sm);
+  background: var(--gw-accent);
+  box-shadow: 0 1px 2px rgba(27, 46, 51, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* 内部小方块：让标识块不是纯色块，多一个层次 */
+.mh__badge::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .mh__sep {

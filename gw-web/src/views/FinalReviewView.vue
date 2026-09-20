@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * react · 事件响应（终审区）
+ * 终审区（风险整改闭环）
  *
  * 责任：已确认风险的整改闭环 —— 版本推进、差异比较、AI 复审、法务终审、签名与关闭。
  * 边界：不重新对所有物料执行一次完整初审。
@@ -93,7 +93,7 @@ const events = ref([
   <div class="view">
     <ConversationThread :messages="messages" />
 
-    <Teleport to="#wb-aside">
+    <Teleport defer to="#wb-aside">
       <!-- 待办：终审区的主要对象是风险记录，不是物料 -->
       <PanelCard title="待你处理" hint="3 项">
         <ul class="todo">

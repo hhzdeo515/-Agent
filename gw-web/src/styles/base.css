@@ -99,14 +99,25 @@ a {
  * ========================================================================== */
 
 .gw-card {
+  position: relative;
   background: var(--gw-surface);
-  border: 1px solid var(--gw-line);
   border-radius: var(--gw-r);
-  box-shadow: var(--gw-shadow-sm);
+  /* 双层阴影 + 内描边：比"边框 + 单层阴影"更像真实浮起的卡片 */
+  box-shadow: var(--gw-elev-2), var(--gw-hairline);
 }
 
 .gw-card--flush {
   box-shadow: none;
+}
+
+/* 可交互的浮起：用层次变化代替边框变色，更克制 */
+.gw-card--interactive {
+  transition: box-shadow var(--gw-dur) var(--gw-ease), transform var(--gw-dur) var(--gw-ease);
+}
+
+.gw-card--interactive:hover {
+  box-shadow: var(--gw-elev-3), var(--gw-hairline);
+  transform: translateY(-1px);
 }
 
 .gw-divider {

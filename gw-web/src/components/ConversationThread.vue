@@ -177,18 +177,30 @@ defineProps<{ messages: Message[] }>()
 
 .msg__metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: 1px;
-  margin-top: var(--gw-s4);
-  background: var(--gw-line);
-  border: 1px solid var(--gw-line);
-  border-radius: var(--gw-r);
-  overflow: hidden;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--gw-s3);
+  margin-top: var(--gw-s5);
 }
 
 .metric {
-  padding: var(--gw-s3) var(--gw-s4);
-  background: var(--gw-surface);
+  position: relative;
+  padding: var(--gw-s4) var(--gw-s4) var(--gw-s4);
+  background: var(--gw-bg-sunken);
+  border-radius: var(--gw-r);
+  overflow: hidden;
+  box-shadow: var(--gw-hairline);
+}
+
+/* 顶部点缀色细线：既是视觉节奏，也表明"这组数字是 Agent 的判断结果" */
+.metric::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gw-accent);
+  opacity: 0.55;
 }
 
 .metric__label {
@@ -198,16 +210,18 @@ defineProps<{ messages: Message[] }>()
 }
 
 .metric__value {
-  font-size: var(--gw-fs-xl);
+  font-size: 22px;
   font-weight: 600;
   color: var(--gw-text);
-  line-height: 1.3;
-  margin-top: 2px;
+  line-height: 1.25;
+  margin-top: 4px;
+  letter-spacing: -0.01em;
 }
 
 .metric__hint {
   font-size: var(--gw-fs-xs);
   color: var(--gw-text-tertiary);
-  margin-top: 1px;
+  margin-top: 2px;
+  line-height: 1.45;
 }
 </style>
