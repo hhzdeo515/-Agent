@@ -119,6 +119,7 @@ gw-api/
 | | `mock`（默认） | `dashscope`（千问大模型） |
 | --- | --- | --- |
 | 风险识别 | 关键词规则表匹配 | `qwen-plus` 识别候选 + 判断，服务端做结构化校验 |
+| 知识库检索 | 按风险类型确定性查询 | `text-embedding-v4` 向量召回 + `qwen3-rerank` 精排 |
 | 图片文字 | ❌ 不支持 | `qwen-vl-ocr`（失败自动换 `qwen3.5-ocr` 兜底） |
 | 画面语义 | ❌ 不支持 | `qwen3-vl-8b-thinking` |
 | 视频口播 | ❌ 不支持 | `qwen3-asr-flash-filetrans`（异步，毫秒级句/字时间戳） |
@@ -149,12 +150,19 @@ docker compose up -d
 | 2 | `qwen-vl-ocr` 的通用文字识别是否返回文字坐标 | 项目记录的未知项 V1，决定图片风险能否精确框选（不返回则如实降级为"大致区域"） |
 | 3 | `qwen3-asr-flash-filetrans` 的句级时间戳字段名与单位 | 决定视频风险能否定位到时间点 |
 | 4 | 临时文件上传 → `oss://` URL → 模型可解析 | 决定内网 MinIO 的物料能否送达模型服务 |
+| 5 | `text-embedding-v4` 与 `qwen3-rerank` 的实际返回结构 | 两者的接口路径与请求体结构不同（见第六节第 14 条），需确认默认地址可用 |
+
+**已完成的验证**（无需 Key 即可做的部分）：
+- `mock` 路径主链路端到端 **61/61 断言通过**（无回归）
+- 三个解析客户端各做了离线逻辑验证（OCR 37/37 断言）
+- 失败快速：`GW_AI_PROVIDER=dashscope` 且 Key 为空时，应用**启动即失败**并给出可操作提示
+  （实测输出：`已选择 GW_AI_PROVIDER=dashscope，但 DASHSCOPE_API_KEY 为空。请在 deploy/.env 中填写…`）
 
 ## 四、未实现 / 待办
 
 | 项 | 状态 | 说明 |
 | --- | --- | --- |
-| **向量检索与重排** | ⏳ 部分 | 初审的"规则与证据检索"当前是确定性的知识库查询（按风险类型取 ACTIVE 规则 + 已发布条款），**不是**期望的 `text-embedding-v4` dense+sparse + `qwen3-rerank`。但检索结果不再恒为空——恒为空会让校验器丢弃全部法条引用（详见第五节第 7 条） |
+| **向量检索与重排** | ✅ 已实现（未实测） | `RetrievalPort` + `DashScopeRetrievalAdapter`：`text-embedding-v4` 向量召回 → `qwen3-rerank` 精排。向量缓存于 Redis（键含模型名，换模型不会读到旧向量）。检索不可用时回落确定性查询，且 `available()` 让上层能区分"没检索到"与"检索不可用" |
 | **JWT 认证** | ⏳ 未实现 | 当前从请求头取主体，**仅供本地联调**。`SecurityConfig` 已标注待收紧 |
 | **异步任务与真实进度** | ⏳ 未实现 | 解析与初审当前同步执行。AGENTS.md 第 14 条要求异步 + 真实进度 + 重试入口 |
 | **Batch 批量推理** | ⏳ 未实现 | `qwen-vl-ocr` 支持 Batch 且单价约为实时一半，是当前最有效的成本手段（docs/03 D-04） |
@@ -205,6 +213,14 @@ docker compose up -d
 13. **临时文件上传只用于联调**。百炼临时存储 48 小时有效、凭证接口 100 QPS 且不支持扩容，
     官方明确"请勿用于生产环境"。它解决的是"内网 MinIO 的物料如何送达模型服务"这个问题，
     生产应换 OSS，并通过 `AudioUrlResolver` 扩展点覆盖，不必改本模块。
+14. **rerank 的接口与其它模型不一样**。`qwen3-rerank` 走
+    `/compatible-api/v1/reranks`（不是 `/compatible-mode`），请求体是**扁平**的
+    （`query`/`documents`/`top_n` 与 `model` 同级，没有 `input`/`parameters`），
+    响应也在**顶层**（没有 `output` 包裹）。官方文档特意提示过这个差异，
+    按 `gte-rerank-v2` 的写法会直接 400。换 rerank 模型时先确认真实契约。
+15. **"没检索到"与"检索不可用"必须分开**。前者意味着确实没有依据（可以判定为待人工判断），
+    后者意味着这次没查成（应当回落而不是下结论）。`RetrievalPort.available()` 就是为此存在——
+    把一次网络抖动变成一批风险"无依据"，是这条链路上最容易发生的静默错误。
 
 ## 六、验证记录
 

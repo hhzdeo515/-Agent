@@ -142,6 +142,16 @@ public class DashScopeClient {
         return exchange(props.getDashscope().getBaseUrl() + path, body, model, label);
     }
 
+    /**
+     * OpenAI 兼容接口上的任意 POST（{@code /embeddings}、{@code /reranks} 等）。
+     *
+     * <p>与 {@link #chat} 分开是因为这两类接口的请求体完全自定义，
+     * 硬塞进 chat 的 messages 结构只会得到一个 400。
+     */
+    public JsonNode nativePostOnCompatible(String path, Object body, String model, String label) {
+        return exchange(props.getDashscope().getCompatibleBaseUrl() + path, body, model, label);
+    }
+
     /** 带异步头的 POST：ASR Filetrans 这类"提交任务"的调用需要 {@code X-DashScope-Async: enable} */
     public JsonNode postAsync(String path, Object body, String model, String label) {
         return exchange(props.getDashscope().getBaseUrl() + path, body, model, label,

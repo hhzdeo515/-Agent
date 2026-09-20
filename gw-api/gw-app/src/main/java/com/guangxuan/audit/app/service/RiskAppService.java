@@ -13,6 +13,7 @@ import com.guangxuan.audit.common.security.PermCode;
 import com.guangxuan.audit.domain.ai.RiskDraft;
 import com.guangxuan.audit.domain.ai.RiskDraftValidator;
 import com.guangxuan.audit.domain.port.AiInferencePort;
+import com.guangxuan.audit.domain.port.RetrievalPort;
 import com.guangxuan.audit.domain.risk.ReviewScope;
 import com.guangxuan.audit.domain.risk.RiskCase;
 import com.guangxuan.audit.domain.risk.RiskStateMachine;
@@ -79,6 +80,17 @@ public class RiskAppService {
     private final LegalBasisMapper legalBasisMapper;
     private final com.guangxuan.audit.infra.persistence.mapper.RiskCommunicationScriptMapper
             scriptMapper;
+
+    /**
+     * 语义检索端口：可选。
+     *
+     * <p>用 {@link org.springframework.beans.factory.ObjectProvider} 注入而不是强依赖，
+     * 是因为规则实现（mock）下不存在检索实现，而缺了它初审仍应能跑
+     * （回落到确定性查询）。optional 注入让"检索能力缺失"成为可判定的状态，
+     * 而不是启动期报错。
+     */
+    private final org.springframework.beans.factory.ObjectProvider<
+            com.guangxuan.audit.domain.port.RetrievalPort> retrievalPortProvider;
 
     @Value("${gw.ai.pipeline-version:0.1.0}")
     private String pipelineVersion;
@@ -209,28 +221,74 @@ public class RiskAppService {
     }
 
     /**
-     * 阶段 3：按候选风险类型检索规则与法条。
+     * 阶段 3：检索规则与法条。
      *
-     * <p>只取 {@code ACTIVE} 规则与 {@code PUBLISHED} 知识库（口径与
-     * {@code LegalBasisMapper.findByRiskType} 一致），因此检索结果本身就是
-     * "当前现行有效"的依据集合。历史上、企业内部的规则刻意不混进来——
-     * 界面必须能区分现行规则与历史规则（AGENTS.md 第 10 条）。
+     * <p>优先走<b>语义检索</b>（embedding 召回 + rerank 精排）。理由：法务与模型描述
+     * 同一件事的用词往往不同（"绝对化用语" vs "国家级"），只按风险类型做确定性查询
+     * 会漏掉大量相关条款，而检索结果直接决定校验器允许模型引用哪些依据。
      *
-     * <p>真实实现应升级为向量检索（{@code text-embedding-v4} dense+sparse +
-     * {@code qwen3-rerank} 重排）。但在那之前，这个确定性查询比返回空集更正确：
-     * 空集不是"更安全"，而是把校验器变成了对所有引用的否决权。
+     * <p>检索不可用时回落到"按风险类型取 ACTIVE 规则 + 已发布条款"的确定性查询。
+     * 这个回落是必要的，但<b>不能当成等价替代</b>：确定性查询只能覆盖
+     * "规则表里已经登记过的类型"，检索不到就等于没有依据。
      */
     private List<AiInferencePort.RetrievedRule> retrieveRules(List<RiskDraft> candidates) {
         Set<String> types = new LinkedHashSet<>();
+        List<String> queryParts = new ArrayList<>();
         for (RiskDraft d : candidates) {
             if (d.riskType() != null && !d.riskType().isBlank()) {
                 types.add(d.riskType());
+                queryParts.add(d.riskType());
+            }
+            if (d.riskText() != null && !d.riskText().isBlank()) {
+                queryParts.add(d.riskText());
             }
         }
         if (types.isEmpty()) {
             return List.of();
         }
 
+        List<AiInferencePort.RetrievedRule> byVector = retrieveByVector(String.join(" ", queryParts));
+        if (!byVector.isEmpty()) {
+            return byVector;
+        }
+
+        return retrieveDeterministic(types);
+    }
+
+    /** 语义检索；任何一步不可用都返回空列表，由调用方回落 */
+    private List<AiInferencePort.RetrievedRule> retrieveByVector(String query) {
+        com.guangxuan.audit.domain.port.RetrievalPort retrievalPort =
+                retrievalPortProvider.getIfAvailable();
+        if (retrievalPort == null || !retrievalPort.available()) {
+            return List.of();
+        }
+        try {
+            List<RetrievalPort.RetrievedChunk> chunks = retrievalPort.retrieve(
+                    new RetrievalPort.RetrievalRequest(query, 5, 20));
+            if (chunks.isEmpty()) {
+                return List.of();
+            }
+            log.info("规则检索（语义）：命中 {} 条，来源={}",
+                    chunks.size(), chunks.get(0).source());
+            return chunks.stream()
+                    .map(c -> new AiInferencePort.RetrievedRule(
+                            c.kbItemVersionId(), c.chunkNo(), c.lawTitle(),
+                            c.text(), c.effectiveStatus(), c.lawTitle()))
+                    .toList();
+        } catch (Exception e) {
+            log.warn("语义检索异常，回落确定性查询: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    /**
+     * 确定性查询（回落路径）。
+     *
+     * <p>只取 {@code ACTIVE} 规则与 {@code PUBLISHED} 知识库，因此结果本身就是
+     * "当前现行有效"的依据集合；历史规则与企业内部规则刻意不混进来，
+     * 界面必须能区分现行规则与历史规则（AGENTS.md 第 10 条）。
+     */
+    private List<AiInferencePort.RetrievedRule> retrieveDeterministic(Set<String> types) {
         List<AiInferencePort.RetrievedRule> out = new ArrayList<>();
         Set<Long> seen = new HashSet<>();
         for (String type : types) {
@@ -252,7 +310,7 @@ public class RiskAppService {
                 log.warn("规则检索失败: riskType={} err={}", type, e.getMessage());
             }
         }
-        log.info("规则检索完成：候选类型 {} 个，检索到依据 {} 条", types.size(), out.size());
+        log.info("规则检索（确定性回落）：候选类型 {} 个，检索到依据 {} 条", types.size(), out.size());
         return out;
     }
 

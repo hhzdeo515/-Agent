@@ -65,48 +65,77 @@ public class AiStatusController {
         out.put("rulesetVersion", props.getRulesetVersion());
 
         List<Map<String, Object>> capabilities = new ArrayList<>();
+        // verified 的口径必须严格：只有真的用真实模型调用验证过才算 true。
+        // "编译通过"、"有单元级离线验证"都不算——
+        // 把没验证过的能力标成可用，正是 AGENTS.md 第 15 条要禁止的事。
+        String unverifiedNote = dashscope
+                ? "已按官方文档实现并通过编译，但尚未用真实 API Key 做过调用验证"
+                : null;
+
         capabilities.add(cap("文字识别（图片中的文字）",
                 dashscope ? "AVAILABLE" : "UNAVAILABLE",
-                dashscope ? "由 " + props.getModels().getOcrPrimary() + " 识别"
-                        : "规则实现没有 OCR 能力，图片物料无法解析"));
+                dashscope ? "由 " + props.getModels().getOcrPrimary() + " 识别，失败自动换 "
+                        + props.getModels().getOcrFallback() + " 兜底"
+                        : "规则实现没有 OCR 能力，图片物料无法解析",
+                !dashscope, unverifiedNote));
         capabilities.add(cap("画面语义理解",
                 dashscope ? "AVAILABLE" : "UNAVAILABLE",
                 dashscope ? "由 " + props.getModels().getVision() + " 理解画面"
-                        : "规则实现没有视觉能力，画面类风险无法识别"));
+                        : "规则实现没有视觉能力，画面类风险无法识别",
+                !dashscope, unverifiedNote));
         capabilities.add(cap("语音转写（视频口播）",
                 dashscope ? "AVAILABLE" : "UNAVAILABLE",
-                dashscope ? "由 " + props.getModels().getAsr() + " 转写，带毫秒级时间戳"
-                        : "规则实现没有语音识别能力，视频物料无法解析"));
+                dashscope ? "由 " + props.getModels().getAsr() + " 转写，带毫秒级句/字时间戳"
+                        : "规则实现没有语音识别能力，视频物料无法解析",
+                !dashscope, unverifiedNote));
         capabilities.add(cap("文档文字提取（PDF/Word/PPT）",
                 dashscope ? "AVAILABLE" : "PARTIAL",
-                dashscope ? "优先取文本层，扫描件走 OCR 兜底"
-                        : "规则实现只能读纯文本（.txt/.md/.csv）"));
+                dashscope ? "优先取文本层，扫描件渲染页面图走 OCR 兜底"
+                        : "规则实现只能读纯文本（.txt/.md/.csv）",
+                !dashscope, unverifiedNote));
         capabilities.add(cap("风险识别与判断",
                 dashscope ? "AVAILABLE" : "RULE_BASED",
                 dashscope ? "由 " + props.getModels().getText() + " 识别候选并判断，服务端做结构化校验"
-                        : "规则实现按关键词匹配，只能覆盖已知表述"));
+                        : "规则实现按关键词匹配，只能覆盖已知表述；主链路已通过 61 项端到端断言",
+                !dashscope, unverifiedNote));
         capabilities.add(cap("AI 复审（三问）",
                 dashscope ? "AVAILABLE" : "RULE_BASED",
                 dashscope ? "模型基于新旧版本原文比对与语义理解作答"
-                        : "规则实现按原文是否仍存在作答"));
-        capabilities.add(cap("知识库向量检索与重排",
-                "UNAVAILABLE",
-                "当前为确定性的规则/条款查询，尚未接入 "
-                        + props.getModels().getEmbedding() + " + " + props.getModels().getRerank()));
+                        : "规则实现按原文是否仍存在作答；主链路已通过端到端断言",
+                !dashscope, unverifiedNote));
+        capabilities.add(cap("知识库语义检索与重排",
+                dashscope ? "AVAILABLE" : "UNAVAILABLE",
+                dashscope
+                        ? "由 " + props.getModels().getEmbedding() + " 向量召回 + "
+                        + props.getModels().getRerank() + " 精排；向量缓存在 Redis"
+                        : "规则实现按风险类型做确定性查询，不具备语义检索能力",
+                !dashscope, unverifiedNote));
         out.put("capabilities", capabilities);
 
         out.put("note", dashscope
                 ? "AI 结论均为初审意见，不构成法律结论；最终批准必须由有权限的法务人员完成。"
+                + "当前为千问大模型实现，已实现但尚未实测，请按 README 的冒烟清单验证后再投入正式使用。"
                 : "当前为规则实现，仅用于验证流程，不具备真实审核能力。"
-                        + "填写 DASHSCOPE_API_KEY 并把 GW_AI_PROVIDER 改为 dashscope 可启用千问大模型。");
+                + "填写 DASHSCOPE_API_KEY 并把 GW_AI_PROVIDER 改为 dashscope 可启用千问大模型。");
         return Result.ok(out);
     }
 
     private static Map<String, Object> cap(String name, String status, String detail) {
+        return cap(name, status, detail, false, null);
+    }
+
+    /**
+     * @param verified         是否用真实模型调用验证过
+     * @param verificationNote 未验证时说明"验证到什么程度、还差什么"
+     */
+    private static Map<String, Object> cap(String name, String status, String detail,
+                                           boolean verified, String verificationNote) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("name", name);
         m.put("status", status);
         m.put("detail", detail);
+        m.put("verified", verified);
+        m.put("verificationNote", verified ? null : verificationNote);
         return m;
     }
 
