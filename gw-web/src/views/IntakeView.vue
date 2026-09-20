@@ -2,242 +2,272 @@
 /**
  * 接收区（正式审核流程入口）
  *
- * 责任：审核任务的创建、材料接收、解析调度与审核要求。
- * 边界：本模块只把任务与材料规范地送入审核系统，
- *      **不提前展示最终风险结论** —— 因此右栏只有任务/进度/要求，没有风险条目。
- */
-import { onMounted, ref } from 'vue'
-import ConversationThread, { type Message } from '@/components/ConversationThread.vue'
-import PanelCard from '@/components/PanelCard.vue'
-import FileDropzone from '@/components/FileDropzone.vue'
-
-/**
- * 当前任务的 id。
+ * 职责：创建审核任务、接收材料、完成解析、记录审核要求。
+ * 本模块只把任务与材料规范地送入审核系统，**不提前展示最终风险结论**，
+ * 因此这里没有对话区、没有风险条目——那些属于反馈区与终审区。
  *
- * 进入模块时自动准备一个草稿任务，使用户可以立刻拖拽上传——
- * 否则上传区会显示"请先创建审核任务"并处于禁用态，看起来像"功能用不了"。
- * 草稿任务尚未上传材料时不影响任何统计口径（未进入初审就不计入通过率分母）。
+ * 界面结构：左侧是「材料提交窗口」（唯一的核心操作），右侧是任务状态与后续动作。
  */
-const caseId = ref<number | null>(null)
-const caseNo = ref<string>('')
-const preparing = ref(false)
-/** 上传并解析成功的物料数，用于侧栏进度 */
-const uploadedCount = ref(0)
+import { computed, onMounted, ref } from 'vue'
+import FileDropzone from '@/components/FileDropzone.vue'
+import PanelCard from '@/components/PanelCard.vue'
+import { ApiError, apiGet, apiPost } from '@/api/client'
 
-function onUploaded() {
-  uploadedCount.value += 1
+interface CaseInfo {
+  id: number
+  caseNo: string
+  name: string
+  status: string
+  deadline?: string
+  materialCount: number
+  requirementConfirmed: boolean
+  requirementConfirmedAt?: string
 }
 
-/** 准备任务：已有则复用，没有则自动建一个草稿 */
-async function ensureCase(): Promise<number | null> {
-  if (caseId.value) return caseId.value
-  if (preparing.value) return null
-  preparing.value = true
-  try {
-    const { apiPost } = await import('@/api/client')
-    const c = await apiPost<{ id: number; caseNo: string }>('/api/intake/cases', {
-      projectId: 1,
-      name: '新一批宣传物料审核',
-    })
-    caseId.value = c.id
-    caseNo.value = c.caseNo
-    return c.id
-  } catch (e) {
-    messages.value.push({
-      id: 'err' + Date.now(),
-      role: 'agent',
-      text: '任务准备失败：' + (e instanceof Error ? e.message : '未知错误')
-        + '\n请确认后端服务已启动（http://localhost:8080）。',
-      time: new Date().toTimeString().slice(0, 5),
-      tone: 'warning',
-    })
-    return null
-  } finally {
-    preparing.value = false
-  }
-}
-
-// 进入模块即准备任务，让上传区立即可用
-onMounted(() => {
-  void ensureCase()
-})
-
-async function createCase() {
-  caseId.value = null
-  await ensureCase()
-}
-
-const messages = ref<Message[]>([
-  {
-    id: 'm1',
-    role: 'user',
-    text: '创建任务：2026 秋季新品上市宣传物料审核，截止本周五。',
-    time: '09:12',
-  },
-  {
-    id: 'm2',
-    role: 'agent',
-    text:
-      '任务已建立，编号 GX-20260920-0001。\n' +
-      '已接收 12 份材料，其中图片 6 份、视频 2 份、PPT 2 份、PDF 1 份、纯文案 1 份。\n\n' +
-      '需要你确认本次审核要求后，我才能启动 AI 初审——模板内容不会被自动当作正式要求。',
-    time: '09:12',
-    tone: 'neutral',
-    trace: [
-      {
-        stage: '任务建档',
-        summary: '生成业务编号并绑定项目与负责人',
-        details: ['项目：秋季新品上市', '负责人：林砚（法务审核）', '截止：2026-09-25 18:00'],
-        costMs: 120,
-      },
-      {
-        stage: '材料接收',
-        summary: '12 份材料已入库，按内容判定格式（非扩展名）',
-        details: ['图片 6 · 视频 2 · PPT 2 · PDF 1 · 文本 1', '全部完成 SHA-256 计算，用于重复上传识别'],
-        costMs: 860,
-      },
-      {
-        stage: '解析调度',
-        summary: '10 份解析完成，2 份需重传',
-        details: [
-          '图片走 OCR 文本定位 + 画面语义',
-          '视频走 ASR 口播 + 关键帧 + 硬字幕',
-          '失败：物料 #7 文件受损、物料 #11 未提取到可审核内容',
-        ],
-        costMs: 41200,
-      },
-      {
-        stage: '审核要求',
-        summary: '等待法务确认审核要求',
-        details: ['模板 DEFAULT 已选用，但未确认前不生效'],
-        state: 'running',
-      },
-    ],
-    metrics: [
-      { label: '材料总数', value: 12 },
-      { label: '解析完成', value: 10, hint: '2 份需重传' },
-      { label: '待确认项', value: 1, hint: '审核要求' },
-    ],
-  },
-])
-
-interface MaterialRow {
+interface MaterialItem {
   id: number
   name: string
-  type: string
-  status: 'done' | 'failed' | 'running' | 'pending'
-  statusText: string
-  note?: string
+  materialType: string
+  parseStatus: string
+  parseErrorMessage?: string
 }
 
-const materials = ref<MaterialRow[]>([
-  { id: 1, name: '秋季主视觉海报-A.png', type: '图片', status: 'done', statusText: '解析完成' },
-  { id: 2, name: '秋季主视觉海报-B.png', type: '图片', status: 'done', statusText: '解析完成' },
-  { id: 3, name: '新品卖点长图.png', type: '图片', status: 'done', statusText: '解析完成' },
-  { id: 4, name: '门店易拉宝.png', type: '图片', status: 'done', statusText: '解析完成' },
-  { id: 5, name: '社媒方图-01.png', type: '图片', status: 'done', statusText: '解析完成' },
-  { id: 6, name: '社媒方图-02.png', type: '图片', status: 'done', statusText: '解析完成' },
-  { id: 7, name: '发布会宣传片.mp4', type: '视频', status: 'failed', statusText: '文件受损', note: '请重新上传' },
-  { id: 8, name: '产品演示短片.mp4', type: '视频', status: 'running', statusText: '解析中 62%' },
-  { id: 9, name: '上市方案.pptx', type: 'PPT', status: 'done', statusText: '解析完成' },
-  { id: 10, name: '渠道政策.pptx', type: 'PPT', status: 'done', statusText: '解析完成' },
-  { id: 11, name: '产品说明书.pdf', type: 'PDF', status: 'failed', statusText: '未提取到内容', note: '疑为扫描件，建议提供可复制版本' },
-  { id: 12, name: '主推文案.txt', type: '文本', status: 'done', statusText: '解析完成' },
-])
+const caseInfo = ref<CaseInfo | null>(null)
+const materials = ref<MaterialItem[]>([])
+const preparing = ref(false)
+const busy = ref(false)
+const errorText = ref<string | null>(null)
+const submitted = ref(false)
 
-const statusClass: Record<MaterialRow['status'], string> = {
-  done: 'gw-status--success',
-  failed: 'gw-status--danger',
-  running: 'gw-status--brass',
-  pending: 'gw-status--muted',
-}
-
-const requirements = [
+/** 审核要求关注点；确认后才生效（AGENTS.md 第 4 条：模板不得默认为正式要求） */
+const requirements = ref([
   { label: '绝对化宣传', on: true },
   { label: '安全承诺', on: true },
   { label: '无依据数据', on: true },
   { label: '竞品相关表达', on: false },
   { label: '价格宣传', on: true },
   { label: '免责声明缺失', on: true },
-]
+])
+
+const caseId = computed(() => caseInfo.value?.id ?? null)
+const uploadedCount = computed(() => materials.value.length)
+const parseFailed = computed(() => materials.value.filter((m) => m.parseStatus === 'FAILED'))
+
+const typeLabel: Record<string, string> = {
+  IMAGE: '图片', VIDEO: '视频', TEXT: '文本', PPT: 'PPT', PDF: 'PDF', WORD: 'Word',
+}
+const statusLabel: Record<string, string> = {
+  PENDING: '待解析', RUNNING: '解析中', SUCCEEDED: '解析完成',
+  FAILED: '解析失败', PARTIAL: '部分解析',
+}
+const statusTone: Record<string, string> = {
+  PENDING: 'gw-status--muted', RUNNING: 'gw-status--brass', SUCCEEDED: 'gw-status--success',
+  FAILED: 'gw-status--danger', PARTIAL: 'gw-status--brass',
+}
+
+onMounted(() => {
+  void ensureCase()
+})
+
+/** 准备任务：进入即可上传，不需要用户先手动点"新建" */
+async function ensureCase() {
+  if (caseInfo.value || preparing.value) return
+  preparing.value = true
+  errorText.value = null
+  try {
+    const c = await apiPost<CaseInfo>('/api/intake/cases', {
+      projectId: 1,
+      name: '新一批宣传物料审核',
+    })
+    caseInfo.value = c
+  } catch (e) {
+    errorText.value = e instanceof ApiError
+      ? `任务准备失败：${e.message}`
+      : '任务准备失败，请确认后端服务已启动（http://localhost:8080）'
+  } finally {
+    preparing.value = false
+  }
+}
+
+async function refresh() {
+  if (!caseId.value) return
+  try {
+    const d = await apiGet<{ case: CaseInfo; materials: MaterialItem[] }>(
+      `/api/intake/cases/${caseId.value}`,
+    )
+    caseInfo.value = d.case
+    materials.value = d.materials ?? []
+  } catch {
+    /* 刷新失败不打断主流程，界面保留上一次状态 */
+  }
+}
+
+function onUploaded() {
+  void refresh()
+}
+
+/** 确认审核要求：这一步之后才能启动 AI 初审 */
+async function confirmRequirement() {
+  if (!caseId.value) return
+  busy.value = true
+  errorText.value = null
+  try {
+    await apiPost('/api/intake/requirements', {
+      caseId: caseId.value,
+      templateCode: 'DEFAULT',
+      requirement: {
+        focusPoints: requirements.value.filter((r) => r.on).map((r) => r.label),
+      },
+    })
+    await refresh()
+  } catch (e) {
+    errorText.value = e instanceof ApiError ? e.message : '确认失败'
+  } finally {
+    busy.value = false
+  }
+}
+
+/** 启动 AI 初审，任务进入反馈区 */
+async function startReview() {
+  if (!caseId.value) return
+  busy.value = true
+  errorText.value = null
+  try {
+    await apiPost(`/api/intake/cases/${caseId.value}/initial-review`)
+    await refresh()
+    submitted.value = true
+  } catch (e) {
+    errorText.value = e instanceof ApiError ? e.message : '启动初审失败'
+  } finally {
+    busy.value = false
+  }
+}
+
+const canStartReview = computed(() =>
+  !!caseInfo.value?.requirementConfirmed && uploadedCount.value > 0 && !busy.value)
 </script>
 
 <template>
   <div class="view">
-    <!-- 正式物料的上传通道：文件会存入对象存储、建立不可覆盖的版本并触发解析 -->
-    <section class="intake-upload">
-      <div class="intake-upload__head">
-        <h2 class="intake-upload__title">材料接收</h2>
-        <span v-if="caseId" class="gw-status gw-status--ink">
-          <span class="gw-status__dot" />{{ caseNo }} · 已上传 {{ uploadedCount }} 份
-        </span>
-        <span v-else-if="preparing" class="gw-status gw-status--muted">正在准备任务…</span>
-        <button v-else class="gw-btn gw-btn--primary" type="button" @click="createCase">
-          重新准备任务
-        </button>
+    <!-- ── 材料提交窗口：本模块唯一的核心操作 ───────────────────────── -->
+    <section class="submit">
+      <div class="submit__head">
+        <div class="submit__title-row">
+          <h2 class="submit__title">材料接收</h2>
+          <span v-if="caseInfo" class="gw-status gw-status--ink">
+            <span class="gw-status__dot" />{{ caseInfo.caseNo }} · 已提交 {{ uploadedCount }} 份
+          </span>
+          <span v-else-if="preparing" class="gw-status gw-status--muted">正在准备任务…</span>
+        </div>
+        <p class="submit__hint">
+          支持图片、视频、PPT、PDF、Word 与纯文本；上传后自动解析并生成定位锚点。
+        </p>
       </div>
-      <FileDropzone :case-id="caseId" @uploaded="onUploaded" />
-    </section>
 
-    <ConversationThread :messages="messages" />
+      <FileDropzone :case-id="caseId" @uploaded="onUploaded" />
+
+      <p v-if="errorText" class="err">{{ errorText }}</p>
+
+      <!-- 已提交材料 -->
+      <div v-if="materials.length" class="list">
+        <div class="list__head">
+          <span class="list__title">已提交材料</span>
+          <span class="list__count">{{ materials.length }} 份</span>
+        </div>
+        <ul class="gw-rows">
+          <li v-for="m in materials" :key="m.id" class="gw-row">
+            <div class="gw-row__main">
+              <span class="gw-row__title gw-truncate">{{ m.name }}</span>
+              <span v-if="m.parseErrorMessage" class="gw-row__sub">{{ m.parseErrorMessage }}</span>
+            </div>
+            <div class="gw-row__side">
+              <span class="tag">{{ typeLabel[m.materialType] ?? m.materialType }}</span>
+              <span class="gw-status" :class="statusTone[m.parseStatus] ?? 'gw-status--muted'">
+                {{ statusLabel[m.parseStatus] ?? m.parseStatus }}
+              </span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <p v-if="parseFailed.length" class="warn">
+        有 {{ parseFailed.length }} 份材料解析失败，这些材料不会进入正式初审，
+        请重新上传或补充内容。
+      </p>
+
+      <div v-if="submitted" class="done">
+        <span class="gw-status gw-status--success"><span class="gw-status__dot" />已提交初审</span>
+        <span class="done__text">材料已进入反馈区，请前往<span class="done__link">反馈区</span>处理风险。</span>
+      </div>
+    </section>
 
     <Teleport defer to="#wb-aside">
       <!-- 任务信息 -->
-      <PanelCard title="任务信息" hint="GX-20260920-0001">
-        <dl class="kv">
-          <div class="kv__row"><dt>任务名称</dt><dd>2026 秋季新品上市宣传物料审核</dd></div>
-          <div class="kv__row"><dt>所属项目</dt><dd>秋季新品上市</dd></div>
-          <div class="kv__row"><dt>提交人</dt><dd>周琦（品牌）</dd></div>
-          <div class="kv__row"><dt>负责人</dt><dd>林砚（法务审核）</dd></div>
-          <div class="kv__row"><dt>截止时间</dt><dd class="gw-mono">2026-09-25 18:00</dd></div>
-          <div class="kv__row">
+      <PanelCard title="任务信息" :hint="caseInfo?.caseNo">
+        <dl class="gw-kv">
+          <div class="gw-kv__row"><dt>任务名称</dt><dd>{{ caseInfo?.name ?? '—' }}</dd></div>
+          <div class="gw-kv__row"><dt>任务编号</dt><dd class="gw-mono">{{ caseInfo?.caseNo ?? '—' }}</dd></div>
+          <div class="gw-kv__row"><dt>材料数量</dt><dd>{{ uploadedCount }} 份</dd></div>
+          <div class="gw-kv__row">
             <dt>当前状态</dt>
-            <dd><span class="gw-status gw-status--wine"><span class="gw-status__dot" />解析中</span></dd>
+            <dd>
+              <span class="gw-status gw-status--wine">
+                <span class="gw-status__dot" />{{ caseInfo?.status ?? '—' }}
+              </span>
+            </dd>
           </div>
         </dl>
       </PanelCard>
 
-      <!-- 解析进度：用可计量单位，不用凭感觉的百分比 -->
-      <PanelCard title="解析进度" hint="10 / 12">
-        <div class="prog">
-          <div class="prog__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="83">
-            <span class="prog__fill" style="width: 83%" />
-          </div>
-          <div class="prog__legend">
-            <span><i class="dot dot--ok" />完成 10</span>
-            <span><i class="dot dot--run" />进行中 1</span>
-            <span><i class="dot dot--err" />失败 2</span>
-          </div>
-        </div>
-
-        <ul class="mats">
-          <li v-for="m in materials" :key="m.id" class="mats__row">
-            <div class="mats__main">
-              <span class="mats__name gw-truncate" :title="m.name">{{ m.name }}</span>
-              <span class="mats__note" v-if="m.note">{{ m.note }}</span>
-            </div>
-            <span class="mats__type">{{ m.type }}</span>
-            <span class="gw-status" :class="statusClass[m.status]">{{ m.statusText }}</span>
-          </li>
-        </ul>
-      </PanelCard>
-
-      <!-- 审核要求 -->
-      <PanelCard title="审核要求" hint="未确认">
-        <ul class="req__list">
+      <!-- 审核要求：确认后才生效 -->
+      <PanelCard title="审核要求" :hint="caseInfo?.requirementConfirmed ? '已确认' : '待确认'">
+        <ul class="req">
           <li v-for="r in requirements" :key="r.label" class="req__item">
-            <span class="req__box" :class="{ 'is-on': r.on }" aria-hidden="true">
+            <button
+              class="req__box"
+              :class="{ 'is-on': r.on }"
+              type="button"
+              :aria-pressed="r.on"
+              @click="r.on = !r.on"
+            >
               <svg v-if="r.on" viewBox="0 0 12 12" width="9" height="9" fill="none">
-                <path d="M2.5 6.2 4.8 8.5 9.5 3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M2.5 6.2 4.8 8.5 9.5 3.6" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round" />
               </svg>
-            </span>
+            </button>
             <span class="req__label">{{ r.label }}</span>
           </li>
         </ul>
-        <div class="req__actions">
-          <button class="btn btn--ghost" type="button">使用其他模板</button>
-          <button class="btn btn--primary" type="button">确认审核要求</button>
+        <div class="gw-btn-row">
+          <button
+            class="gw-btn gw-btn--ghost gw-btn--block"
+            type="button"
+            :disabled="busy || caseInfo?.requirementConfirmed"
+            @click="confirmRequirement"
+          >
+            {{ caseInfo?.requirementConfirmed ? '要求已确认' : '确认审核要求' }}
+          </button>
         </div>
+      </PanelCard>
+
+      <!-- 提交初审 -->
+      <PanelCard title="提交初审">
+        <dl class="gw-kv">
+          <div class="gw-kv__row"><dt>可审材料</dt><dd>{{ uploadedCount - parseFailed.length }} 份</dd></div>
+          <div class="gw-kv__row"><dt>解析失败</dt><dd>{{ parseFailed.length }} 份</dd></div>
+        </dl>
+        <div class="gw-btn-row">
+          <button
+            class="gw-btn gw-btn--primary gw-btn--block"
+            type="button"
+            :disabled="!canStartReview"
+            @click="startReview"
+          >
+            {{ busy ? '提交中…' : '提交并开始 AI 初审' }}
+          </button>
+        </div>
+        <p v-if="!caseInfo?.requirementConfirmed" class="tip">需先确认审核要求</p>
+        <p v-else-if="uploadedCount === 0" class="tip">需先上传至少一份材料</p>
       </PanelCard>
     </Teleport>
   </div>
@@ -248,133 +278,106 @@ const requirements = [
   display: contents;
 }
 
-/* ── 材料接收区 ───────────────────────────────────────────────────── */
-.intake-upload {
+/* ── 材料提交窗口 ─────────────────────────────────────────────────── */
+.submit {
   max-width: 920px;
-  margin-bottom: var(--gw-s7);
+  margin: 0 auto;
 }
 
-.intake-upload__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gw-s4);
+.submit__head {
   margin-bottom: var(--gw-s4);
 }
 
-.intake-upload__title {
-  font-size: var(--gw-fs-md);
+.submit__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-s4);
+}
+
+.submit__title {
+  font-size: var(--gw-fs-lg);
   font-weight: 600;
   color: var(--gw-text);
   letter-spacing: -0.01em;
 }
 
-/* ── 键值对 ───────────────────────────────────────────────────────── */
-.kv__row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--gw-s4);
-  padding: 5px 0;
-}
-
-.kv__row dt {
-  width: 68px;
-  flex: none;
+.submit__hint {
+  margin-top: 6px;
   font-size: var(--gw-fs-sm);
   color: var(--gw-text-tertiary);
-}
-
-.kv__row dd {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--gw-fs-base);
-  color: var(--gw-text);
   line-height: var(--gw-lh);
 }
 
-/* ── 进度 ─────────────────────────────────────────────────────────── */
-.prog__bar {
-  height: 4px;
-  border-radius: var(--gw-r-pill);
-  background: var(--gw-bg-sunken);
-  overflow: hidden;
-}
-
-.prog__fill {
-  display: block;
-  height: 100%;
-  border-radius: var(--gw-r-pill);
-  background: var(--gw-accent);
-}
-
-.prog__legend {
-  display: flex;
-  gap: var(--gw-s4);
-  margin-top: var(--gw-s3);
-  font-size: var(--gw-fs-xs);
-  color: var(--gw-text-tertiary);
-}
-
-.prog__legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex: none;
-}
-.dot--ok {
-  background: var(--gw-success);
-}
-.dot--run {
-  background: var(--gw-accent);
-}
-.dot--err {
-  background: var(--gw-danger);
-}
-
-/* ── 物料清单 ─────────────────────────────────────────────────────── */
-.mats {
+.err {
   margin-top: var(--gw-s4);
-  border-top: 1px solid var(--gw-line);
+  padding: var(--gw-s3) var(--gw-s4);
+  border-radius: var(--gw-r-sm);
+  border-left: 3px solid var(--gw-danger);
+  background: var(--gw-danger-bg);
+  font-size: var(--gw-fs-sm);
+  color: var(--gw-text-secondary);
+  line-height: var(--gw-lh);
 }
 
-.mats__row {
+.warn {
+  margin-top: var(--gw-s4);
+  padding: var(--gw-s3) var(--gw-s4);
+  border-radius: var(--gw-r-sm);
+  border-left: 3px solid var(--gw-warning);
+  background: var(--gw-warning-bg);
+  font-size: var(--gw-fs-sm);
+  color: var(--gw-text-secondary);
+  line-height: var(--gw-lh);
+}
+
+.done {
   display: flex;
   align-items: center;
-  gap: var(--gw-s2);
-  padding: var(--gw-s3) 0;
-  border-bottom: 1px solid var(--gw-line-soft);
+  gap: var(--gw-s3);
+  margin-top: var(--gw-s5);
+  padding: var(--gw-s4) var(--gw-s5);
+  border: 1px solid var(--gw-line);
+  border-left: 3px solid var(--gw-success);
+  border-radius: var(--gw-r);
+  background: var(--gw-surface);
+  box-shadow: var(--gw-elev-1);
 }
 
-.mats__row:last-child {
-  border-bottom: 0;
+.done__text {
+  font-size: var(--gw-fs-sm);
+  color: var(--gw-text-secondary);
 }
 
-.mats__main {
-  flex: 1;
-  min-width: 0;
+.done__link {
+  color: var(--gw-accent-text);
+  font-weight: 500;
 }
 
-.mats__name {
-  display: block;
-  font-size: var(--gw-fs-base);
+/* ── 已提交材料 ───────────────────────────────────────────────────── */
+.list {
+  margin-top: var(--gw-s6);
+}
+
+.list__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--gw-s3);
+  margin-bottom: var(--gw-s2);
+}
+
+.list__title {
+  font-size: var(--gw-fs-md);
+  font-weight: 600;
   color: var(--gw-text);
-  line-height: 1.35;
 }
 
-.mats__note {
-  display: block;
-  font-size: var(--gw-fs-xs);
+.list__count {
+  font-size: var(--gw-fs-sm);
   color: var(--gw-text-tertiary);
-  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
-.mats__type {
+.tag {
   flex: none;
   font-size: var(--gw-fs-xs);
   color: var(--gw-text-tertiary);
@@ -384,8 +387,8 @@ const requirements = [
   line-height: 16px;
 }
 
-/* ── 审核要求 ─────────────────────────────────────────────────────── */
-.req__list {
+/* ── 审核要求勾选 ─────────────────────────────────────────────────── */
+.req {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -404,10 +407,13 @@ const requirements = [
   width: 15px;
   height: 15px;
   flex: none;
+  padding: 0;
   border: 1px solid var(--gw-line-strong);
   border-radius: 4px;
+  background: transparent;
   color: #fff;
-  transition: background var(--gw-dur-fast) var(--gw-ease), border-color var(--gw-dur-fast) var(--gw-ease);
+  transition: background var(--gw-dur-fast) var(--gw-ease),
+    border-color var(--gw-dur-fast) var(--gw-ease);
 }
 
 .req__box.is-on {
@@ -420,41 +426,10 @@ const requirements = [
   color: var(--gw-text);
 }
 
-.req__actions {
-  display: flex;
-  gap: var(--gw-s2);
-  margin-top: var(--gw-s4);
-}
-
-/* ── 按钮：克制，无渐变 ────────────────────────────────────────────── */
-.btn {
-  flex: 1;
-  height: 30px;
-  border-radius: var(--gw-r-sm);
-  font-size: var(--gw-fs-base);
-  font-weight: 500;
-  transition: background var(--gw-dur-fast) var(--gw-ease), border-color var(--gw-dur-fast) var(--gw-ease);
-}
-
-.btn--primary {
-  border: 1px solid var(--gw-accent);
-  background: var(--gw-accent);
-  color: #fff;
-}
-
-.btn--primary:hover {
-  background: var(--gw-accent-strong);
-  border-color: var(--gw-accent-strong);
-}
-
-.btn--ghost {
-  border: 1px solid var(--gw-line-strong);
-  background: transparent;
-  color: var(--gw-text-secondary);
-}
-
-.btn--ghost:hover {
-  background: var(--gw-bg-sunken);
-  color: var(--gw-text);
+.tip {
+  margin-top: var(--gw-s3);
+  font-size: var(--gw-fs-xs);
+  color: var(--gw-text-tertiary);
+  text-align: center;
 }
 </style>
