@@ -152,6 +152,12 @@ docker compose up -d
 > 供应商切换是**运行时**生效的（两套实现常驻，由 `RoutingAiInferenceAdapter` /
 > `RoutingParseAdapter` 按当前配置分派），因此不需要重启容器。
 
+> ⚠️ **AI 配置的权限边界**：读写 AI 配置需要 `admin.config`，该权限**只授予 ADMIN 角色**，
+> 法务（LEGAL）刻意没有。这是职责分离要求（AGENTS.md 第 2 条：管理员维护系统配置、
+> 法务负责业务判断）——能改模型型号的人等于能影响所有审核结论的可比性。
+> 本地联调时前端通过请求头声明权限（见 `gw-web/src/api/client.ts` 的 `ACTOR`），
+> **生产环境这些必须由服务端从 JWT 派生，绝不能由客户端声明**。
+
 启动后 `GET /api/ai/status` 会如实报告当前生效的供应商、模型型号，以及
 **哪些能力可用、哪些还没有**（详见第五节第 10 条）。
 
