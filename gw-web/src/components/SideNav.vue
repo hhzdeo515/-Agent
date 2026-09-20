@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { MODULES, type ModuleKey } from '@/config/modules'
+import AiStatusPanel from '@/components/AiStatusPanel.vue'
 
 const props = defineProps<{ active: ModuleKey }>()
 
@@ -69,6 +70,9 @@ const initials = computed(() => user.name.slice(0, 1))
     </div>
 
     <div class="nav__spacer" />
+
+    <!-- ── AI 能力状态：常驻显示当前用的是规则实现还是千问大模型 ──── -->
+    <AiStatusPanel />
 
     <!-- ── 左下角：个人信息 ──────────────────────────────────────── -->
     <div class="nav__rule" />
