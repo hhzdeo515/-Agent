@@ -3,7 +3,6 @@ package com.guangxuan.audit.infra.provider.dashscope;
 import com.guangxuan.audit.domain.port.ParsePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "dashscope")
 public class DashScopeParseAdapter implements ParsePort {
 
     private final DashScopeOcrClient ocrClient;

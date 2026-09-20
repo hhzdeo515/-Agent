@@ -113,6 +113,9 @@ gw:
     ruleset-version: ${GW_RULESET_VERSION:0.1.0}
 
   security:
+    # 敏感配置（如模型 API Key）落库前的加密密钥。
+    # 不配置时会从 GW_JWT_SECRET 派生并打 WARN——可用，但轮换 JWT 密钥会导致配置无法解密。
+    config-secret: ${GW_CONFIG_SECRET:}
     jwt:
       # 生产必须通过环境变量覆盖；长度需满足 HS256 要求（≥32 字节）
       secret: ${GW_JWT_SECRET:change-me-in-production-please-use-32bytes-min}

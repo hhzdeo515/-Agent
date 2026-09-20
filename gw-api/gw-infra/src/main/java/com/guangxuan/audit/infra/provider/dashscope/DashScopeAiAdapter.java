@@ -9,7 +9,6 @@ import com.guangxuan.audit.domain.port.AiInferencePort;
 import com.guangxuan.audit.infra.provider.RiskKeywordRules;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "dashscope")
 public class DashScopeAiAdapter implements AiInferencePort {
 
     private final DashScopeClient client;

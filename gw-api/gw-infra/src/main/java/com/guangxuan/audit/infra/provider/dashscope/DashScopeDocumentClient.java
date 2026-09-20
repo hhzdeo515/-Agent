@@ -23,7 +23,6 @@ import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -99,7 +98,6 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "dashscope")
 public class DashScopeDocumentClient {
 
     // ── 常量：解析器标识（必须随结果一起上报，便于区分"谁解析的"）──────────

@@ -8,7 +8,6 @@ import com.guangxuan.audit.infra.persistence.mapper.LegalBasisMapper;
 import com.guangxuan.audit.infra.provider.RiskKeywordRules;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -28,7 +27,6 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "mock", matchIfMissing = true)
 public class MockAiAdapter implements AiInferencePort {
 
     /**

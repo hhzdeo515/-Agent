@@ -8,7 +8,6 @@ import com.guangxuan.audit.infra.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -90,7 +89,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "dashscope")
 public class DashScopeAsrClient {
 
     // ── 官方 endpoint（相对 gw.ai.dashscope.base-url）────────────────────────

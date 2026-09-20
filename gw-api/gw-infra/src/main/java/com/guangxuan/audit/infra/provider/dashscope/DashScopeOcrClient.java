@@ -8,7 +8,6 @@ import com.guangxuan.audit.domain.port.ParsePort;
 import com.guangxuan.audit.infra.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -49,7 +48,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "dashscope")
 public class DashScopeOcrClient {
 
     protected final DashScopeClient client;

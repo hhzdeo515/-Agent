@@ -7,7 +7,6 @@ import com.guangxuan.audit.domain.port.ParsePort;
 import com.guangxuan.audit.infra.storage.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
@@ -39,7 +38,6 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "gw.ai.provider", havingValue = "mock", matchIfMissing = true)
 public class MockParseAdapter implements ParsePort {
 
     private static final String ENGINE = "mock";

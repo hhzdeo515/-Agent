@@ -1,7 +1,9 @@
 package com.guangxuan.audit.infra.persistence.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 import java.util.Map;
@@ -35,4 +37,21 @@ public interface SysUserMapper {
              ORDER BY u.id
             """)
     List<Map<String, Object>> listActiveUsers();
+
+    /**
+     * 更新本人可改的字段。
+     *
+     * <p><b>刻意只开放 display_name 与 dept</b>：username 是登录凭据，
+     * 角色决定权限边界——允许用户改角色等于允许他给自己所有权限。
+     * 少这两个字段不是功能缺失，而是授权模型的基本要求。
+     */
+    @Update("""
+            UPDATE sys_user
+               SET display_name = #{displayName},
+                   dept         = #{dept}
+             WHERE id = #{userId}
+            """)
+    int updateProfile(@Param("userId") Long userId,
+                      @Param("displayName") String displayName,
+                      @Param("dept") String dept);
 }
