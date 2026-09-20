@@ -1,0 +1,243 @@
+/* ============================================================================
+ * 基础样式：重置 + 排版基线
+ * 原则：不引入任何装饰性视觉；层级全部依靠间距、字重与细分割线建立
+ * ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--gw-font);
+  font-size: var(--gw-fs-base);
+  line-height: var(--gw-lh);
+  color: var(--gw-text);
+  background: var(--gw-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'tnum' 1, 'cv05' 1;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--gw-accent-text, var(--gw-ink-700));
+  text-decoration: none;
+}
+
+/* ── 细滚动条：不喧宾夺主 ─────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gw-line-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--gw-line-strong);
+  border-radius: var(--gw-r-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--gw-ink-300);
+  background-clip: content-box;
+}
+
+/* ── 焦点可见性：键盘可达性，不做装饰性描边 ────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--gw-accent, var(--gw-ink-700));
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+ * 通用原子类（克制使用，仅覆盖高频重复）
+ * ========================================================================== */
+
+.gw-card {
+  background: var(--gw-surface);
+  border: 1px solid var(--gw-line);
+  border-radius: var(--gw-r);
+  box-shadow: var(--gw-shadow-sm);
+}
+
+.gw-card--flush {
+  box-shadow: none;
+}
+
+.gw-divider {
+  height: 1px;
+  background: var(--gw-line);
+  border: 0;
+  margin: 0;
+}
+
+.gw-label {
+  font-size: var(--gw-fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gw-text-tertiary);
+}
+
+.gw-mono {
+  font-family: var(--gw-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gw-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================================
+ * 状态胶囊：流程状态用「描边」表达，与风险等级的「实心色块」形成两套编码
+ * 这是刻意区分——避免用户把「高风险」误读成「流程卡住了」（需求第 13 条）
+ * ========================================================================== */
+.gw-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-s1);
+  height: 22px;
+  padding: 0 8px;
+  font-size: var(--gw-fs-xs);
+  font-weight: 500;
+  line-height: 1;
+  border-radius: var(--gw-r-pill);
+  border: 1px solid var(--gw-line-strong);
+  background: transparent;
+  color: var(--gw-text-secondary);
+  white-space: nowrap;
+}
+
+.gw-status__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.gw-status--ink {
+  border-color: var(--gw-ink-300);
+  color: var(--gw-ink-700);
+}
+.gw-status--brass {
+  border-color: var(--gw-brass-400);
+  color: var(--gw-brass-700);
+}
+.gw-status--wine {
+  border-color: var(--gw-wine-400);
+  color: var(--gw-wine-700);
+}
+.gw-status--danger {
+  border-color: #d9a9a9;
+  color: var(--gw-danger);
+}
+.gw-status--success {
+  border-color: #a8c9b8;
+  color: var(--gw-success);
+}
+.gw-status--muted {
+  border-color: var(--gw-line-strong);
+  color: var(--gw-text-tertiary);
+}
+
+/* ============================================================================
+ * 风险等级标记：实心色块（与上面的描边胶囊是两套视觉编码）
+ * ========================================================================== */
+.gw-level {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  font-size: var(--gw-fs-xs);
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--gw-r-sm);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.gw-level--high {
+  background: var(--gw-risk-high);
+}
+.gw-level--medium {
+  background: var(--gw-risk-medium);
+}
+.gw-level--low {
+  background: var(--gw-risk-low);
+}
+
+/* ============================================================================
+ * 过渡：仅用于必要的状态变化
+ * ========================================================================== */
+.gw-fade-enter-active,
+.gw-fade-leave-active {
+  transition: opacity var(--gw-dur) var(--gw-ease);
+}
+.gw-fade-enter-from,
+.gw-fade-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

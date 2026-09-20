@@ -1,0 +1,201 @@
+/* ============================================================================
+ * 设计 Token —— 广宣法务审核 Agent 工作台
+ *
+ * 视觉基调（依设计规范）：
+ *   · 低饱和墨青为主色，哑光铜金与暗酒红作为三个技能模块的区分点缀
+ *   · 大面积留白、清晰信息层级、细腻柔和轻阴影、8px 圆角、细分割线
+ *   · 严肃专业商务风格：无夸张渐变、无卡通元素、无多余装饰
+ *
+ * 模块 → 点缀色映射：
+ *   GASP 信息研判（反馈区/风险研判） → 墨青  --gw-ink
+ *   react 事件响应（终审区/整改处置） → 哑光铜金 --gw-brass
+ *   tast 任务调度（接收区/任务材料） → 暗酒红 --gw-wine
+ * ========================================================================== */
+
+:root {
+  /* ── 主色：低饱和墨青 ───────────────────────────────────────────── */
+  --gw-ink-950: #16262B;
+  --gw-ink-900: #1B2E33;
+  --gw-ink-800: #223A41;
+  --gw-ink-700: #2C4A52; /* 主色 */
+  --gw-ink-600: #3A5A63;
+  --gw-ink-500: #4E6E77;
+  --gw-ink-400: #6E8A92;
+  --gw-ink-300: #9AAFB5;
+  --gw-ink-200: #C6D3D7;
+  --gw-ink-100: #E4EBED;
+  --gw-ink-50: #F2F6F7;
+
+  /* ── 哑光铜金（react 模块）─────────────────────────────────────── */
+  --gw-brass-800: #6F552E;
+  --gw-brass-700: #8A6A3B;
+  --gw-brass-600: #A07E45;
+  --gw-brass-500: #B08D57; /* 主 */
+  --gw-brass-400: #C2A374;
+  --gw-brass-200: #E3D5B8;
+  --gw-brass-100: #F0E7D6;
+  --gw-brass-50: #F8F4EC;
+
+  /* ── 暗酒红（tast 模块）───────────────────────────────────────── */
+  --gw-wine-800: #4E1C22;
+  --gw-wine-700: #5E2229;
+  --gw-wine-600: #6E2A31;
+  --gw-wine-500: #7A2E35; /* 主 */
+  --gw-wine-400: #9A5259;
+  --gw-wine-200: #DFC2C5;
+  --gw-wine-100: #F0E2E3;
+  --gw-wine-50: #F9F3F3;
+
+  /* ── 中性色 ────────────────────────────────────────────────────── */
+  --gw-bg: #f7f8f9; /* 干净背景 */
+  --gw-bg-sunken: #f1f3f4;
+  --gw-surface: #ffffff;
+  --gw-surface-hover: #fafbfb;
+
+  /* 细分割线 */
+  --gw-line: #e6eaec;
+  --gw-line-soft: #eef1f2;
+  --gw-line-strong: #d3dade;
+
+  /* 文字层级 */
+  --gw-text: #1f2a2e;
+  --gw-text-secondary: #56666c;
+  --gw-text-tertiary: #8a989d;
+  --gw-text-inverse: #ffffff;
+
+  /* ── 语义色（风险等级用实心色块，流程状态用描边胶囊）──────────── */
+  --gw-risk-high: #a33a3a; /* 高风险 */
+  --gw-risk-high-bg: #f7ebeb;
+  --gw-risk-medium: #b07a2e; /* 中风险 */
+  --gw-risk-medium-bg: #f9f2e6;
+  --gw-risk-low: #7c8a91; /* 低风险 */
+  --gw-risk-low-bg: #f1f3f4;
+
+  --gw-success: #3e7a5e;
+  --gw-success-bg: #ecf4f0;
+  --gw-info: #3a5a63;
+  --gw-info-bg: #eef3f4;
+  --gw-danger: #a33a3a;
+  --gw-danger-bg: #f7ebeb;
+  --gw-warning: #b07a2e;
+  --gw-warning-bg: #f9f2e6;
+
+  /* ── 圆角：8px 基准 ────────────────────────────────────────────── */
+  --gw-r-sm: 6px;
+  --gw-r: 8px;
+  --gw-r-lg: 12px;
+  --gw-r-pill: 999px;
+
+  /* ── 阴影：细腻柔和（低透明度、大扩散、几乎无方向感）────────── */
+  --gw-shadow-xs: 0 1px 2px rgba(27, 46, 51, 0.04);
+  --gw-shadow-sm: 0 1px 3px rgba(27, 46, 51, 0.05), 0 1px 2px rgba(27, 46, 51, 0.03);
+  --gw-shadow-md: 0 2px 8px rgba(27, 46, 51, 0.06), 0 1px 3px rgba(27, 46, 51, 0.03);
+  --gw-shadow-lg: 0 6px 20px rgba(27, 46, 51, 0.07), 0 2px 6px rgba(27, 46, 51, 0.03);
+  --gw-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  /* ── 间距：大面积留白 ──────────────────────────────────────────── */
+  --gw-s1: 4px;
+  --gw-s2: 8px;
+  --gw-s3: 12px;
+  --gw-s4: 16px;
+  --gw-s5: 20px;
+  --gw-s6: 24px;
+  --gw-s7: 32px;
+  --gw-s8: 40px;
+  --gw-s9: 56px;
+
+  /* ── 字体：Inter ───────────────────────────────────────────────── */
+  --gw-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --gw-font-mono: 'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', monospace;
+
+  --gw-fs-xs: 11px;
+  --gw-fs-sm: 12px;
+  --gw-fs-base: 13px;
+  --gw-fs-md: 14px;
+  --gw-fs-lg: 16px;
+  --gw-fs-xl: 20px;
+  --gw-fs-2xl: 24px;
+
+  --gw-lh-tight: 1.3;
+  --gw-lh: 1.55;
+  --gw-lh-loose: 1.75;
+
+  /* ── 布局尺寸 ──────────────────────────────────────────────────── */
+  --gw-nav-w: 216px;
+  --gw-aside-w: 380px;
+  --gw-header-h: 56px;
+  --gw-statusbar-h: 44px;
+
+  /* ── 动效：克制，仅用于状态过渡 ────────────────────────────────── */
+  --gw-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --gw-dur-fast: 120ms;
+  --gw-dur: 200ms;
+}
+
+/* ============================================================================
+ * 模块点缀色：通过 data-module 切换，使三个模块视觉可区分但整体统一
+ * ========================================================================== */
+[data-module='gasp'] {
+  --gw-accent: var(--gw-ink-700);
+  --gw-accent-strong: var(--gw-ink-800);
+  --gw-accent-soft: var(--gw-ink-100);
+  --gw-accent-faint: var(--gw-ink-50);
+  --gw-accent-text: var(--gw-ink-700);
+}
+
+[data-module='react'] {
+  --gw-accent: var(--gw-brass-500);
+  --gw-accent-strong: var(--gw-brass-700);
+  --gw-accent-soft: var(--gw-brass-100);
+  --gw-accent-faint: var(--gw-brass-50);
+  --gw-accent-text: var(--gw-brass-800);
+}
+
+[data-module='tast'] {
+  --gw-accent: var(--gw-wine-500);
+  --gw-accent-strong: var(--gw-wine-700);
+  --gw-accent-soft: var(--gw-wine-100);
+  --gw-accent-faint: var(--gw-wine-50);
+  --gw-accent-text: var(--gw-wine-800);
+}
+
+/* ============================================================================
+ * Element Plus 主题对齐：避免组件库默认蓝与整体墨青体系冲突
+ * ========================================================================== */
+:root {
+  --el-color-primary: #2c4a52;
+  --el-color-primary-light-3: #4e6e77;
+  --el-color-primary-light-5: #6e8a92;
+  --el-color-primary-light-7: #9aafb5;
+  --el-color-primary-light-8: #c6d3d7;
+  --el-color-primary-light-9: #e4ebed;
+  --el-color-primary-dark-2: #223a41;
+
+  --el-color-success: #3e7a5e;
+  --el-color-warning: #b07a2e;
+  --el-color-danger: #a33a3a;
+  --el-color-error: #a33a3a;
+  --el-color-info: #7c8a91;
+
+  --el-text-color-primary: #1f2a2e;
+  --el-text-color-regular: #56666c;
+  --el-text-color-secondary: #8a989d;
+  --el-text-color-placeholder: #a9b4b8;
+
+  --el-border-color: #e6eaec;
+  --el-border-color-light: #eef1f2;
+  --el-border-color-lighter: #f1f3f4;
+  --el-fill-color-blank: #ffffff;
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #f7f8f9;
+
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+
+  --el-font-family: var(--gw-font);
+  --el-font-size-base: 13px;
+
+  --el-box-shadow-light: var(--gw-shadow-sm);
+  --el-box-shadow: var(--gw-shadow-md);
+}

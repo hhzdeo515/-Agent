@@ -1,0 +1,118 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: gw-audit
+
+  datasource:
+    # ⚠️ characterEncoding 必须用 Java 字符集名 UTF-8，不能写 MySQL 的 utf8mb4——
+    #    后者会让 Connector/J 抛 java.io.UnsupportedEncodingException: utf8mb4。
+    #    Connector/J 8.x 会把 UTF-8 映射到服务端的 utf8mb4。
+    url: jdbc:mysql://${GW_DB_HOST:localhost}:${GW_DB_PORT:3306}/${GW_DB_NAME:gw_audit}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
+    username: ${GW_DB_USER:gw_audit}
+    password: ${GW_DB_PASSWORD:gw_audit}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      pool-name: gw-audit-pool
+
+  # Flyway 负责建表、触发器、视图（01 文档 V1–V9）
+  flyway:
+    enabled: ${GW_FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    out-of-order: false
+
+  # 队列 / 进度 / 分布式锁 / 幂等键 / 令牌桶限流
+  # 部署时使用 Redis 7.2.x 或 Valkey；Redis 8 起为 RSALv2/SSPLv1/AGPLv3 三许可（见 06 §2.1）
+  data:
+    redis:
+      host: ${GW_REDIS_HOST:localhost}
+      port: ${GW_REDIS_PORT:6379}
+      password: ${GW_REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  servlet:
+    multipart:
+      max-file-size: 2GB
+      max-request-size: 2GB
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Asia/Shanghai
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: ""   # 刻意不启用逻辑删除：审计链路要求物理保留，删除一律禁止（01 文档 §7.1）
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# ── 业务与集成配置 ────────────────────────────────────────────────
+gw:
+  storage:
+    # MinIO：物料原件与派生图（页面渲染图、视频帧）。权威副本只在此处。
+    endpoint: ${GW_MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${GW_MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${GW_MINIO_SECRET_KEY:minioadmin}
+    bucket: ${GW_MINIO_BUCKET:gw-audit}
+    # 预签名 URL 有效期（秒）。物料可能含未发布产品，URL 越短越好。
+    presign-expiry-seconds: 900
+
+  ai:
+    provider: ${GW_AI_PROVIDER:mock}    # mock | dashscope
+    region: cn-beijing                  # 06/00 文档：必须锁定北京，RPM 600 vs 新加坡 60
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+      base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+      compatible-base-url: ${DASHSCOPE_COMPAT_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+    models:
+      # 具体型号需按 M0 的 V6 实测后锁定；此处为 00 文档 §7.2 的初始建议值
+      vision: ${GW_MODEL_VISION:qwen3-vl-8b-thinking}
+      ocr-primary: ${GW_MODEL_OCR_PRIMARY:qwen-vl-ocr}
+      ocr-fallback: ${GW_MODEL_OCR_FALLBACK:qwen3.5-ocr}
+      asr: ${GW_MODEL_ASR:qwen3-asr-flash-filetrans}
+      embedding: ${GW_MODEL_EMBEDDING:text-embedding-v4}
+      rerank: ${GW_MODEL_RERANK:qwen3-rerank}
+    # 流水线/提示词/规则集版本必须落库（00 文档 ADR D-10、01 文档 risk_case）
+    pipeline-version: ${GW_PIPELINE_VERSION:0.1.0}
+    prompt-version: ${GW_PROMPT_VERSION:0.1.0}
+    ruleset-version: ${GW_RULESET_VERSION:0.1.0}
+
+  security:
+    jwt:
+      # 生产必须通过环境变量覆盖；长度需满足 HS256 要求（≥32 字节）
+      secret: ${GW_JWT_SECRET:change-me-in-production-please-use-32bytes-min}
+      expire-minutes: ${GW_JWT_EXPIRE_MINUTES:480}
+
+logging:
+  level:
+    root: INFO
+    com.guangxuan.audit: ${GW_LOG_LEVEL:INFO}
+  pattern:
+    # 注意：日志中不得出现物料原文（AGENTS.md 第 12 条）
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"

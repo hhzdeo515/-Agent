@@ -1,0 +1,26 @@
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+
+import 'element-plus/dist/index.css'
+import '@/styles/tokens.css'
+import '@/styles/base.css'
+import '@/styles/components.css'
+
+import App from './App.vue'
+import router from './router'
+
+const app = createApp(App)
+
+// 图标按需注册为全局组件（工作台图标数量有限，全量注册换来模板简洁）
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
+app.use(createPinia())
+app.use(router)
+app.use(ElementPlus, { locale: zhCn, size: 'small', zIndex: 2000 })
+
+app.mount('#app')

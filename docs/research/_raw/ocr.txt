@@ -1,0 +1,4305 @@
+﻿使用教程 - PaddleOCR 文档
+跳转至
+You're not viewing the latest version.
+Click here to go to latest.
+PaddleOCR 文档
+使用教程
+简体中文
+English
+正在初始化搜索引擎
+PaddlePaddle/PaddleOCR
+Home
+论文展示
+安装
+快速开始
+PP-OCRv6
+PP-StructureV3
+PP-ChatOCRv4
+PaddleOCR-VL
+HPD-Parsing
+推理与部署
+生态集成
+模块列表
+产线列表
+数据标注与合成&数据集
+多硬件使用
+其他说明
+低代码全流程开发
+近期更新
+version2.x
+FAQ
+社区
+PaddleOCR 文档
+PaddlePaddle/PaddleOCR
+Home
+论文展示
+安装
+快速开始
+PP-OCRv6
+PP-OCRv6
+使用教程
+使用教程
+目录
+1. OCR产线介绍
+2. 快速开始
+2.0 环境准备
+2.0.1 安装推理引擎
+2.0.2 安装 paddleocr
+2.0.3 环境验证
+2.0.4 常见安装问题解决
+2.1 命令行方式
+2.2 Python脚本方式集成
+3. 开发集成/部署
+4. 二次开发
+4.1 模型微调
+4.2 模型应用
+4.2.1 通过参数指定本地模型路径
+4.2.2 通过配置文件指定本地模型路径
+5. 附录
+5. 常见问题与解决方案
+5.1 性能优化问题
+Q: GPU推理速度慢怎么办？
+Q: GPU内存不足（CUDA out of memory）怎么办？
+5.2 模型选择问题
+Q: 如何选择合适的模型？
+5.3 最佳实践
+Q: 生产环境部署建议？
+6. 总结
+PP-OCRv6简介
+PP-StructureV3
+PP-StructureV3
+使用教程
+PP-StructureV3简介
+PP-ChatOCRv4
+PP-ChatOCRv4
+使用教程
+PP-ChatOCRv4简介
+PaddleOCR-VL
+PaddleOCR-VL
+使用教程
+PaddleOCR-VL-1.5简介
+PaddleOCR-VL-1.6简介
+PaddleOCR-VL简介
+PaddleOCR-VL NVIDIA Blackwell 架构 GPU 使用教程
+PaddleOCR-VL 昆仑芯 XPU 使用教程
+PaddleOCR-VL 海光 DCU 使用教程
+PaddleOCR-VL 沐曦 GPU 使用教程
+PaddleOCR-VL 天数 GPU 使用教程
+PaddleOCR-VL 华为昇腾 NPU 使用教程
+PaddleOCR-VL Apple Silicon 使用教程
+PaddleOCR-VL AMD GPU 使用教程
+PaddleOCR-VL Intel Arc GPU 使用教程
+HPD-Parsing
+HPD-Parsing
+使用教程
+推理与部署
+推理与部署
+本地推理
+本地推理
+高性能推理
+推理引擎与配置说明
+产线并行推理
+C++ 本地部署
+C++ 本地部署
+概述
+通用 OCR 产线 C++ 本地部署 - Linux
+通用 OCR 产线 C++ 本地部署 - Windows
+服务化
+服务化
+自部署服务化
+PaddleOCR 官方 API
+PaddleOCR 官方 API
+总览
+Python SDK
+TypeScript SDK
+Go SDK
+CLI
+跨端部署
+跨端部署
+Android 部署
+iOS 部署
+浏览器端部署
+其它
+其它
+获取ONNX模型
+打包 PaddleOCR 项目
+Benchmark
+生态集成
+生态集成
+MCP 服务器
+Agent Skills
+模块列表
+模块列表
+模块概述
+文档图像方向分类模块
+文档类视觉语言模型模块
+公式识别模块
+版面区域检测模块
+版面分析模块
+印章文本检测模块
+表格单元格检测模块
+表格分类模块
+表格结构识别模块
+文本检测模块
+文本图像矫正模块
+文本行方向分类模块
+文本识别模块
+图表解析模块
+产线列表
+产线列表
+产线概述
+公式识别产线
+文档图像预处理产线
+文档理解产线
+印章文本识别产线
+通用表格识别v2产线
+PP-DocTranslation产线
+数据标注与合成&数据集
+数据标注与合成&数据集
+数据标注
+数据标注
+X-AnyLabeling 文档解析
+其它数据标注工具
+数据合成
+数据合成
+数据合成工具
+数据集
+数据集
+通用中英文OCR数据集
+手写中文OCR数据集
+垂类多语言OCR数据集
+版面分析数据集
+表格识别数据集
+关键信息提取数据集
+多硬件使用
+多硬件使用
+PaddleOCR 多硬件使用指南
+昇腾 NPU 飞桨安装教程
+昆仑 XPU 飞桨安装教程
+其他说明
+其他说明
+PaddleOCR 与 PaddleX
+PaddleOCR 3.x 升级说明
+配置 paddleocr 包日志系统
+低代码全流程开发
+低代码全流程开发
+概述
+快速开始
+近期更新
+version2.x
+version2.x
+模型列表
+基于Python预测引擎推理
+基于C++预测引擎推理
+Visual Studio 2019 Community CMake 编译指南
+服务化部署
+Android部署
+端侧部署
+Paddle2ONNX模型转化与预测
+云上飞桨部署工具
+Benchmark
+FAQ
+社区
+社区
+社区贡献
+附录
+目录
+1. OCR产线介绍
+2. 快速开始
+2.0 环境准备
+2.0.1 安装推理引擎
+2.0.2 安装 paddleocr
+2.0.3 环境验证
+2.0.4 常见安装问题解决
+2.1 命令行方式
+2.2 Python脚本方式集成
+3. 开发集成/部署
+4. 二次开发
+4.1 模型微调
+4.2 模型应用
+4.2.1 通过参数指定本地模型路径
+4.2.2 通过配置文件指定本地模型路径
+5. 附录
+5. 常见问题与解决方案
+5.1 性能优化问题
+Q: GPU推理速度慢怎么办？
+Q: GPU内存不足（CUDA out of memory）怎么办？
+5.2 模型选择问题
+Q: 如何选择合适的模型？
+5.3 最佳实践
+Q: 生产环境部署建议？
+6. 总结
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+-->
+通用OCR产线使用教程
+¶
+1. OCR产线介绍
+¶
+OCR（光学字符识别，Optical Character Recognition）是一种将图像中的文字转换为可编辑文本的技术。它广泛应用于文档数字化、信息提取和数据处理等领域。OCR 可以识别印刷文本、手写文本，甚至某些类型的字体和符号。
+通用 OCR 产线用于解决文字识别任务，提取图片中的文字信息以文本形式输出，本产线支持PP-OCRv3、PP-OCRv4、PP-OCRv5、PP-OCRv6模型的使用，其中默认模型为 PaddleOCR3.7 发布的
+PP-OCRv6_medium
+模型。PP-OCRv6 基于全新设计的 PPLCNetV4 统一骨干网络，提供 tiny/small/medium 三档模型，medium 档在综合精度上相比 PP-OCRv5_server 提升 5.1%（识别）和 4.6%（检测），同时推理速度更快；单一模型统一支持中、英、日及 46 种拉丁语系共 50 种语言。
+通用OCR产线中包含以下5个模块。每个模块均可独立进行训练和推理，并包含多个模型。有关详细信息，请点击相应模块以查看文档。
+文档图像方向分类模块
+（可选）
+文本图像矫正模块
+（可选）
+文本行方向分类模块
+（可选）
+文本检测模块
+文本识别模块
+在本产线中，您可以根据下方的基准测试数据选择使用的模型。
+推理耗时仅包含模型推理耗时，不包含前后处理耗时。
+在带有 [常规模式 / 高性能模式] 标记的推理耗时列中，
+常规模式
+对应本地推理引擎
+paddle_static
+。
+文档图像方向分类模块（可选）：
+模型
+模型下载链接
+Top-1 Acc（%）
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+PP-LCNet_x1_0_doc_ori
+推理模型
+/
+训练模型
+99.06
+2.62 / 0.59
+3.24 / 1.19
+7
+基于PP-LCNet_x1_0的文档图像分类模型，含有四个类别，即0度，90度，180度，270度
+文本图像矫正模块（可选）：
+模型
+模型下载链接
+CER
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+UVDoc
+推理模型
+/
+训练模型
+0.179
+19.05 / 19.05
+- / 869.82
+30.3
+高精度文本图像矫正模型
+文本行方向分类模块（可选）：
+模型
+模型下载链接
+Top-1 Acc（%）
+GPU推理耗时（ms）
+CPU推理耗时 (ms)
+模型存储大小（MB）
+介绍
+PP-LCNet_x0_25_textline_ori
+推理模型
+/
+训练模型
+98.85
+2.16 / 0.41
+2.37 / 0.73
+0.96
+基于PP-LCNet_x0_25的文本行分类模型，含有两个类别，即0度，180度
+PP-LCNet_x1_0_textline_ori
+推理模型
+/
+训练模型
+99.42
+- / -
+2.98 / 2.98
+6.5
+基于PP-LCNet_x1_0的文本行分类模型，含有两个类别，即0度，180度
+文本检测模块：
+模型
+模型下载链接
+检测Hmean（%）
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+PP-OCRv6_medium_det
+推理模型
+/
+训练模型
+86.2*
+- / -
+- / -
+59.4
+PP-OCRv6 的中等规模文本检测模型，基于 PPLCNetV4 + RepLKFPN，精度最高，适合服务端部署
+PP-OCRv6_small_det
+推理模型
+/
+训练模型
+84.1*
+- / -
+- / -
+9.6
+PP-OCRv6 的小型文本检测模型，兼顾精度与效率，适合移动端部署
+PP-OCRv6_tiny_det
+推理模型
+/
+训练模型
+80.6*
+- / -
+- / -
+1.9
+PP-OCRv6 的超轻量文本检测模型（0.43M 参数），适合端侧/IoT 场景
+PP-OCRv5_server_det
+推理模型
+/
+训练模型
+83.8
+89.55 / 70.19
+383.15 / 383.15
+84.3
+PP-OCRv5 的服务端文本检测模型，精度更高，适合在性能较好的服务器上部署
+PP-OCRv5_mobile_det
+推理模型
+/
+训练模型
+79.0
+10.67 / 6.36
+57.77 / 28.15
+4.7
+PP-OCRv5 的移动端文本检测模型，效率更高，适合在端侧设备部署
+PP-OCRv4_server_det
+推理模型
+/
+训练模型
+69.2
+127.82 / 98.87
+585.95 / 489.77
+109
+PP-OCRv4 的服务端文本检测模型，精度更高，适合在性能较好的服务器上部署
+PP-OCRv4_mobile_det
+推理模型
+/
+训练模型
+63.8
+9.87 / 4.17
+56.60 / 20.79
+4.7
+PP-OCRv4 的移动端文本检测模型，效率更高，适合在端侧设备部署
+> *注：PP-OCRv6 指标基于内部多场景评估集测得，PP-OCRv5/v4 指标基于通用评估集测得，两者评估集不同，指标不可直接对比。
+文本识别模块：
+模型
+模型下载链接
+识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+PP-OCRv6_medium_rec
+推理模型
+/
+训练模型
+83.2*
+- / -
+- / -
+73.3
+PP-OCRv6 文本识别模型，基于 PPLCNetV4 + LightSVTR + CTC/NRTR 多头解码器，单模型支持 50 种语言（tiny 档 49 种）
+PP-OCRv6_small_rec
+推理模型
+/
+训练模型
+81.3*
+- / -
+- / -
+20.4
+PP-OCRv6_tiny_rec
+推理模型
+/
+训练模型
+73.5*
+- / -
+- / -
+4.4
+PP-OCRv5_server_rec
+推理模型
+/
+训练模型
+86.38
+8.46 / 2.36
+31.21 / 31.21
+81
+PP-OCRv5_rec 是新一代文本识别模型。该模型致力于以单一模型高效、精准地支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字等复杂文本场景的识别。在保持识别效果的同时，兼顾推理速度和模型鲁棒性，为各种场景下的文档理解提供高效、精准的技术支撑。
+PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+81.29
+5.43 / 1.46
+21.20 / 5.32
+16
+PP-OCRv4_server_rec_doc
+推理模型
+/
+训练模型
+86.58
+8.69 / 2.78
+37.93 / 37.93
+182
+PP-OCRv4_server_rec_doc是在PP-OCRv4_server_rec的基础上，在更多中文文档数据和PP-OCR训练数据的混合数据训练而成，增加了部分繁体字、日文、特殊字符的识别能力，可支持识别的字符为1.5万+，除文档相关的文字识别能力提升外，也同时提升了通用文字的识别能力
+PP-OCRv4_mobile_rec
+推理模型
+/
+训练模型
+78.74
+5.26 / 1.12
+17.48 / 3.61
+10.5
+PP-OCRv4的轻量级识别模型，推理效率高，可以部署在包含端侧设备的多种硬件设备中
+PP-OCRv4_server_rec
+推理模型
+/
+训练模型
+85.19
+8.75 / 2.49
+36.93 / 36.93
+173
+PP-OCRv4的服务器端模型，推理精度高，可以部署在多种不同的服务器上
+en_PP-OCRv4_mobile_rec
+推理模型
+/
+训练模型
+70.39
+4.81 / 1.23
+17.20 / 4.18
+7.5
+基于PP-OCRv4识别模型训练得到的超轻量英文识别模型，支持英文、数字识别
+> *注：PP-OCRv6 指标基于内部多场景评估集测得，PP-OCRv5/v4 指标基于通用评估集测得，两者评估集不同，指标不可直接对比。
+> ❗ 以上列出的是文本识别模块重点支持的
+6个核心模型
+，该模块总共支持
+20个全量模型
+，包含多个多语言文本识别模型，完整的模型列表如下：
+👉模型列表详情
+*
+PP-OCRv5 多场景模型
+模型
+模型下载链接
+中文识别 Avg Accuracy(%)
+英文识别 Avg Accuracy(%)
+繁体中文识别 Avg Accuracy(%)
+日文识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+PP-OCRv5_server_rec
+推理模型
+/
+训练模型
+86.38
+64.70
+93.29
+60.35
+8.46 / 2.36
+31.21 / 31.21
+81
+PP-OCRv5_rec 是新一代文本识别模型。该模型致力于以单一模型高效、精准地支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字等复杂文本场景的识别。在保持识别效果的同时，兼顾推理速度和模型鲁棒性，为各种场景下的文档理解提供高效、精准的技术支撑。
+PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+81.29
+66.00
+83.55
+54.65
+5.43 / 1.46
+21.20 / 5.32
+16
+*
+中文识别模型
+模型
+模型下载链接
+识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+PP-OCRv4_server_rec_doc
+推理模型
+/
+训练模型
+86.58
+8.69 / 2.78
+37.93 / 37.93
+182
+PP-OCRv4_server_rec_doc是在PP-OCRv4_server_rec的基础上，在更多中文文档数据和PP-OCR训练数据的混合数据训练而成，增加了部分繁体字、日文、特殊字符的识别能力，可支持识别的字符为1.5万+，除文档相关的文字识别能力提升外，也同时提升了通用文字的识别能力
+PP-OCRv4_mobile_rec
+推理模型
+/
+训练模型
+78.74
+5.26 / 1.12
+17.48 / 3.61
+10.5
+PP-OCRv4的轻量级识别模型，推理效率高，可以部署在包含端侧设备的多种硬件设备中
+PP-OCRv4_server_rec
+推理模型
+/
+训练模型
+85.19
+8.75 / 2.49
+36.93 / 36.93
+173
+PP-OCRv4的服务器端模型，推理精度高，可以部署在多种不同的服务器上
+PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+72.96
+3.89 / 1.16
+8.72 / 3.56
+10.3
+PP-OCRv3的轻量级识别模型，推理效率高，可以部署在包含端侧设备的多种硬件设备中
+模型
+模型下载链接
+识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+ch_SVTRv2_rec
+推理模型
+/
+训练模型
+68.81
+10.38 / 8.31
+66.52 / 30.83
+80.5
+SVTRv2 是一种由复旦大学视觉与学习实验室（FVL）的OpenOCR团队研发的服务端文本识别模型，其在PaddleOCR算法模型挑战赛 - 赛题一：OCR端到端识别任务中荣获一等奖，A榜端到端识别精度相比PP-OCRv4提升6%。
+模型
+模型下载链接
+识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+ch_RepSVTR_rec
+推理模型
+/
+训练模型
+65.07
+6.29 / 1.57
+20.64 / 5.40
+48.8
+RepSVTR 文本识别模型是一种基于SVTRv2 的移动端文本识别模型，其在PaddleOCR算法模型挑战赛 - 赛题一：OCR端到端识别任务中荣获一等奖，B榜端到端识别精度相比PP-OCRv4提升2.5%，推理速度持平。
+*
+英文识别模型
+模型
+模型下载链接
+识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+en_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+85.25
+-
+-
+7.5
+基于PP-OCRv5识别模型训练得到的超轻量级英文识别模型，进一步提升英文文本的识别准确率，优化空格漏识别的问题，并提高对手写英文文本的识别效果。
+en_PP-OCRv4_mobile_rec
+推理模型
+/
+训练模型
+70.39
+4.81 / 1.23
+17.20 / 4.18
+7.5
+基于PP-OCRv4识别模型训练得到的超轻量英文识别模型，支持英文、数字识别
+en_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+70.69
+3.56 / 0.78
+8.44 / 5.78
+17.3
+基于PP-OCRv3识别模型训练得到的超轻量英文识别模型，支持英文、数字识别
+*
+多语言识别模型
+模型
+模型下载链接
+识别 Avg Accuracy(%)
+GPU推理耗时（ms）
+[常规模式 / 高性能模式]
+CPU推理耗时（ms）
+[常规模式 / 高性能模式]
+模型存储大小（MB）
+介绍
+korean_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+88.0
+5.43 / 1.46
+21.20 / 5.32
+14
+基于PP-OCRv5识别模型训练得到的超轻量韩文识别模型，支持韩文、英文和数字识别
+latin_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+84.7
+5.43 / 1.46
+21.20 / 5.32
+14
+基于PP-OCRv5识别模型训练得到的拉丁文识别模型，支持大部分拉丁字母语言、数字识别
+eslav_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+81.6
+5.43 / 1.46
+21.20 / 5.32
+14
+基于PP-OCRv5识别模型训练得到的东斯拉夫语言识别模型， 支持东斯拉夫语言、英文和数字识别
+th_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+82.68
+-
+-
+7.5
+基于PP-OCRv5识别模型训练得到的泰语识别模型， 支持泰语、英文和数字识别
+el_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+89.28
+-
+-
+7.5
+基于PP-OCRv5识别模型训练得到的希腊语识别模型， 支持希腊语、英文和数字识别
+arabic_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+81.27
+-
+-
+7.6
+基于PP-OCRv5识别模型训练得到的超轻量阿拉伯字母识别模型，支持阿拉伯字母、数字识别
+cyrillic_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+80.27
+-
+-
+7.7
+基于PP-OCRv5识别模型训练得到的超轻量斯拉夫字母识别模型，支持斯拉夫字母、数字识别
+devanagari_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+84.96
+-
+-
+7.5
+基于PP-OCRv5识别模型训练得到的超轻量天城文识别模型，支持印地文、梵文等字母以及数字识别
+te_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+87.65
+-
+-
+7.5
+基于PP-OCRv5识别模型训练得到的超轻量泰卢固文识别模型，支持泰卢固文、数字识别
+ta_PP-OCRv5_mobile_rec
+推理模型
+/
+训练模型
+94.2
+-
+-
+7.5
+基于PP-OCRv5识别模型训练得到的超轻量泰米尔文识别模型，支持泰米尔文、数字识别
+korean_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+60.21
+3.73 / 0.98
+8.76 / 2.91
+9.6
+基于PP-OCRv3识别模型训练得到的超轻量韩文识别模型，支持韩文、数字识别
+japan_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+45.69
+3.86 / 1.01
+8.62 / 2.92
+9.8
+基于PP-OCRv3识别模型训练得到的超轻量日文识别模型，支持日文、数字识别
+chinese_cht_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+82.06
+3.90 / 1.16
+9.24 / 3.18
+10.8
+基于PP-OCRv3识别模型训练得到的超轻量繁体中文识别模型，支持繁体中文、数字识别
+te_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+95.88
+3.59 / 0.81
+8.28 / 6.21
+8.7
+基于PP-OCRv3识别模型训练得到的超轻量泰卢固文识别模型，支持泰卢固文、数字识别
+ka_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+96.96
+3.49 / 0.89
+8.63 / 2.77
+17.4
+基于PP-OCRv3识别模型训练得到的超轻量卡纳达文识别模型，支持卡纳达文、数字识别
+ta_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+76.83
+3.49 / 0.86
+8.35 / 3.41
+8.7
+基于PP-OCRv3识别模型训练得到的超轻量泰米尔文识别模型，支持泰米尔文、数字识别
+latin_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+76.93
+3.53 / 0.78
+8.50 / 6.83
+8.7
+基于PP-OCRv3识别模型训练得到的超轻量拉丁文识别模型，支持拉丁文、数字识别
+arabic_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+73.55
+3.60 / 0.83
+8.44 / 4.69
+17.3
+基于PP-OCRv3识别模型训练得到的超轻量阿拉伯字母识别模型，支持阿拉伯字母、数字识别
+cyrillic_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+94.28
+3.56 / 0.79
+8.22 / 2.76
+8.7
+基于PP-OCRv3识别模型训练得到的超轻量斯拉夫字母识别模型，支持斯拉夫字母、数字识别
+devanagari_PP-OCRv3_mobile_rec
+推理模型
+/
+训练模型
+96.44
+3.60 / 0.78
+6.95 / 2.87
+8.7
+基于PP-OCRv3识别模型训练得到的超轻量梵文字母识别模型，支持梵文字母、数字识别
+测试环境说明:
+性能测试环境
+测试数据集：
+文档图像方向分类模型：PaddleOCR 自建的数据集，覆盖证件和文档等多个场景，包含 1000 张图片。
+文本图像矫正模型：
+DocUNet
+。
+文本检测模型：PaddleOCR 自建的中文数据集，覆盖街景、网图、文档、手写多个场景，其中检测包含 500 张图片。
+中文识别模型： PaddleOCR 自建的中文数据集，覆盖街景、网图、文档、手写多个场景，其中文本识别包含 1.1w 张图片。
+ch_SVTRv2_rec：
+PaddleOCR算法模型挑战赛 - 赛题一：OCR端到端识别任务
+A榜评估集。
+ch_RepSVTR_rec：
+PaddleOCR算法模型挑战赛 - 赛题一：OCR端到端识别任务
+B榜评估集。
+英文识别模型：PaddleOCR 自建的英文数据集。
+多语言识别模型：PaddleOCR 自建的多语种数据集。
+文本行方向分类模型：PaddleOCR 自建的数据集，覆盖证件和文档等多个场景，包含 1000 张图片。
+硬件配置：
+GPU：NVIDIA Tesla T4
+CPU：Intel Xeon Gold 6271C @ 2.60GHz
+软件环境：
+Ubuntu 20.04 / CUDA 11.8 / cuDNN 8.9 / TensorRT 8.6.1.6
+paddlepaddle-gpu 3.0.0 / paddleocr 3.0.3
+推理模式说明
+模式
+GPU配置
+CPU配置
+加速技术组合
+常规模式
+FP32精度 / 无TRT加速
+FP32精度 / 8线程
+paddle_static
+高性能模式
+选择先验精度类型和加速策略的最优组合
+FP32精度 / 8线程
+选择先验最优后端（Paddle/OpenVINO/TRT等）
+如果您更注重模型的精度，请选择精度较高的模型；如果您更在意模型的推理速度，请选择推理速度较快的模型；如果您关注模型的存储大小，请选择存储体积较小的模型。
+2. 快速开始
+¶
+在本地使用通用 OCR 产线前，请先根据所选推理引擎安装对应依赖，再安装
+paddleocr
+Python 包。完整安装说明请参考
+安装教程
+。安装完成后，即可在本地使用命令行体验或 Python 集成。
+请注意，如果在执行过程中遇到程序失去响应、程序异常退出、内存资源耗尽、推理速度极慢等问题，请尝试参考文档调整配置，例如关闭不需要使用的功能或使用更轻量的模型。
+2.0 环境准备
+¶
+2.0.1 安装推理引擎
+¶
+如需使用本地推理引擎
+paddle_static
+，请参考
+飞桨框架安装说明
+安装 PaddlePaddle。
+如需使用
+transformers
+推理引擎，请参考
+推理引擎文档
+安装相关依赖。
+如需使用
+onnxruntime
+推理引擎，请参考
+推理引擎文档
+安装相关依赖。
+2.0.2 安装 paddleocr
+¶
+# 安装基础版本（仅包含OCR功能）
+pip
+install
+paddleocr
+# 安装完整版本（包含所有功能）
+pip
+install
+"paddleocr[all]"
+2.0.3 环境验证
+¶
+# 验证安装是否成功
+import
+paddleocr
+print
+(
+f
+"PaddleOCR版本:
+{
+paddleocr
+.
+__version__
+}
+"
+)
+# 若使用本地推理引擎 paddle_static，可继续验证 PaddlePaddle 与 GPU 是否可用
+import
+paddle
+print
+(
+f
+"Paddle版本:
+{
+paddle
+.
+__version__
+}
+"
+)
+print
+(
+f
+"GPU可用:
+{
+paddle
+.
+is_compiled_with_cuda
+()
+}
+"
+)
+print
+(
+f
+"GPU数量:
+{
+paddle
+.
+device
+.
+cuda
+.
+device_count
+()
+}
+"
+)
+# 若使用 transformers 推理引擎，可继续验证 transformers 依赖是否可用
+import
+transformers
+print
+(
+f
+"Transformers版本:
+{
+transformers
+.
+__version__
+}
+"
+)
+2.0.4 常见安装问题解决
+¶
+问题1：依赖冲突
+# 解决方案：创建新的虚拟环境
+conda
+create
+-n
+paddleocr
+python
+=
+3
+.8
+conda
+activate
+paddleocr
+pip
+install
+paddleocr
+问题2：GPU环境配置
+# 检查CUDA版本
+nvidia-smi
+# 使用本地推理引擎 paddle_static 时，安装对应版本的 PaddlePaddle
+pip
+install
+paddlepaddle-gpu
+==
+3
+.0.0
+-f
+https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+问题3：模型下载失败
+# 设置模型下载源
+import
+os
+os
+.
+environ
+[
+'PADDLE_PDX_MODEL_SOURCE'
+]
+=
+'BOS'
+# 使用百度云存储
+2.1 命令行方式
+¶
+一行命令即可快速体验OCR产线效果。运行以下代码前，请您下载
+示例图片
+到本地：
+paddleocr
+ocr
+-i
+https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/general_ocr_002.png
+\
+--use_doc_orientation_classify
+False
+\
+--use_doc_unwarping
+False
+\
+--use_textline_orientation
+False
+\
+--save_path
+./output
+\
+--device
+gpu:0
+# 通过 --ocr_version 指定 PP-OCR 其他版本
+paddleocr
+ocr
+-i
+./general_ocr_002.png
+--ocr_version
+PP-OCRv4
+上述命令默认使用本地推理引擎
+paddle_static
+。如需运行，请先参考
+飞桨框架安装说明
+安装 PaddlePaddle。
+如果选择
+transformers
+作为推理引擎，请先参考
+推理引擎文档
+完成 Transformers 环境配置，然后执行如下命令：
+# 使用 transformers 引擎进行推理
+paddleocr
+ocr
+-i
+https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/general_ocr_002.png
+\
+--use_doc_orientation_classify
+False
+\
+--use_doc_unwarping
+False
+\
+--use_textline_orientation
+False
+\
+--save_path
+./output
+\
+--device
+gpu:0
+\
+--engine
+transformers
+如果选择
+onnxruntime
+作为推理引擎，请先参考
+推理引擎文档
+完成 ONNX Runtime 环境配置，然后执行如下命令：
+# 使用 onnxruntime 引擎进行推理
+paddleocr
+ocr
+-i
+https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/general_ocr_002.png
+\
+--use_doc_orientation_classify
+False
+\
+--use_doc_unwarping
+False
+\
+--use_textline_orientation
+False
+\
+--save_path
+./output
+\
+--device
+gpu:0
+\
+--engine
+onnxruntime
+在大多数场景下，默认的
+paddle_static
+推理引擎通常具备更好的推理性能，建议优先使用。
+命令行支持更多参数设置，点击展开以查看命令行参数的详细说明
+参数
+参数说明
+参数类型
+默认值
+input
+含义：
+待预测数据，必填。
+说明：
+如图像文件或者PDF文件的本地路径：
+/root/data/img.jpg
+；
+如URL链接
+，如图像文件或PDF文件的网络URL：
+示例
+；
+如本地目录
+，该目录下需包含待预测图像，如本地路径：
+/root/data/
+(当前不支持目录中包含PDF文件的预测，PDF文件需要指定到具体文件路径)。
+str
+save_path
+含义：
+指定推理结果文件保存的路径。
+说明：
+如果不设置，推理结果将不会保存到本地。
+str
+doc_orientation_classify_model_name
+含义：
+文档方向分类模型的名称。
+说明：
+如果不设置，将会使用产线默认模型。
+str
+doc_orientation_classify_model_dir
+含义：
+文档方向分类模型的目录路径。
+说明：
+如果不设置，将会下载官方模型。
+str
+doc_unwarping_model_name
+含义：
+文本图像矫正模型的名称。
+说明：
+如果不设置，将会使用产线默认模型。
+str
+doc_unwarping_model_dir
+含义：
+文本图像矫正模型的目录路径。
+说明：
+如果不设置，将会下载官方模型。
+str
+text_detection_model_name
+含义：
+文本检测模型的名称。
+说明：
+如果不设置，将会使用产线默认模型。
+str
+text_detection_model_dir
+含义：
+文本检测模型的目录路径。
+说明：
+如果不设置，将会下载官方模型。
+str
+textline_orientation_model_name
+含义：
+文本行方向模型的名称。
+说明：
+如果不设置，将会使用产线默认模型。
+str
+textline_orientation_model_dir
+含义：
+文本行方向模型的目录路径。
+说明：
+如果不设置，将会下载官方模型。
+str
+textline_orientation_batch_size
+含义：
+文本行方向模型的batch size。
+说明：
+如果不设置，将默认设置batch size为
+1
+。
+int
+1
+text_recognition_model_name
+含义：
+文本识别模型的名称。
+说明：
+如果不设置，将会使用产线默认模型。
+str
+text_recognition_model_dir
+含义：
+文本识别模型的目录路径。
+说明：
+如果不设置，将会下载官方模型。
+str
+text_recognition_batch_size
+含义：
+文本识别模型的batch size。
+说明：
+如果不设置，将默认设置batch size为
+1
+。
+int
+1
+use_doc_orientation_classify
+含义：
+是否加载并使用文档方向分类模块。
+说明：
+如果不设置，将使用产线初始化的该参数值，默认初始化为
+True
+。
+bool
+True
+use_doc_unwarping
+含义：
+是否加载并使用文本图像矫正模块。
+说明：
+如果不设置，将使用产线初始化的该参数值，默认初始化为
+True
+。
+bool
+True
+use_textline_orientation
+含义：
+是否加载并使用文本行方向模块。
+说明：
+如果不设置，将使用产线初始化的该参数值，默认初始化为
+True
+。
+bool
+True
+text_det_limit_side_len
+含义：
+文本检测的图像边长限制。
+说明：
+大于
+0
+的任意整数。
+如果不设置，将使用产线初始化的该参数值，默认初始化为
+64
+。
+int
+64
+text_det_limit_type
+含义：
+文本检测的边长度限制类型。
+说明：
+支持
+min
+和
+max
+，
+min
+表示保证图像最短边不小于
+det_limit_side_len
+，
+max
+表示保证图像最长边不大于
+limit_side_len
+。
+如果不设置，将使用产线初始化的该参数值，默认初始化为
+min
+。
+str
+min
+text_det_thresh
+含义：
+文本检测像素阈值，输出的概率图中，得分大于该阈值的像素点才会被认为是文字像素点。
+说明：
+大于
+0
+的任意浮点数。
+如果不设置，将使用产线初始化的该参数值（默认为
+0.3
+）。
+float
+0.3
+text_det_box_thresh
+含义：
+文本检测框阈值，检测结果边框内，所有像素点的平均得分大于该阈值时，该结果会被认为是文字区域。
+说明：
+大于
+0
+的任意浮点数。
+如果不设置，将使用产线初始化的该参数值（默认为
+0.6
+）。
+float
+0.6
+text_det_unclip_ratio
+含义：
+文本检测扩张系数，使用该方法对文字区域进行扩张，该值越大，扩张的面积越大。
+说明：
+大于
+0
+的任意浮点数。
+如果不设置，将使用产线初始化的该参数值（默认为
+2.0
+）。
+float
+2.0
+text_det_input_shape
+含义：
+文本检测的输入形状。
+说明：
+可以设置3个值代表C，H，W。
+int
+text_rec_score_thresh
+含义：
+文本识别阈值，得分大于该阈值的文本结果会被保留。
+说明：
+大于
+0
+的任意浮点数。
+如果不设置，将使用产线初始化的该参数值（默认为
+0.0
+，即不设阈值）。
+float
+0.0
+return_word_box
+含义：
+是否返回识别结果的文字框坐标。
+说明：
+如果不设置，将使用产线初始化的该参数值，默认初始化为
+False
+。
+bool
+False
+text_rec_input_shape
+含义：
+文本识别的输入形状。
+tuple
+lang
+含义：
+使用指定语言的 OCR 模型。
+说明：
+附录中的表格中列举了全部支持的语言。
+str
+ocr_version
+含义：
+OCR 模型版本。
+说明：
+PP-OCRv6
+：使用PP-OCRv6系列模型；
+PP-OCRv5
+：使用PP-OCRv5系列模型；
+PP-OCRv4
+：使用PP-OCRv4系列模型；
+PP-OCRv3
+：使用PP-OCRv3系列模型。
+注意不是每个
+ocr_version
+都支持所有的
+lang
+，请查看附录中的对应关系表。
+str
+device
+含义：
+用于推理的设备。
+说明：
+支持指定具体卡号：
+CPU
+：如
+cpu
+表示使用 CPU 进行推理；
+GPU
+：如
+gpu:0
+表示使用第 1 块 GPU 进行推理；
+NPU
+：如
+npu:0
+表示使用第 1 块 NPU 进行推理；
+XPU
+：如
+xpu:0
+表示使用第 1 块 XPU 进行推理；
+MLU
+：如
+mlu:0
+表示使用第 1 块 MLU 进行推理；
+DCU
+：如
+dcu:0
+表示使用第 1 块 DCU 进行推理；
+沐曦 GPU
+：如
+metax_gpu:0
+表示使用第 1 块沐曦 GPU 进行推理；
+天数 GPU
+：如
+iluvatar_gpu:0
+表示使用第 1 块天数 GPU 进行推理；
+如果不设置，将默认使用产线初始化的该参数值，初始化时，会优先使用本地的 GPU 0号设备，如果没有，则使用 CPU 设备。
+str
+engine
+含义：
+推理引擎。
+说明：
+支持
+None
+（默认值）、
+paddle
+、
+paddle_static
+、
+paddle_dynamic
+、
+transformers
+。保持为默认值
+None
+时，PaddleOCR 保留旧版本的行为，在大多数配置下等价于
+paddle
+。详细说明、取值、兼容性规则与示例请参见
+推理引擎与配置说明
+。
+str|None
+None
+enable_hpi
+含义：
+是否启用高性能推理。
+bool
+None
+use_tensorrt
+含义：
+是否启用 Paddle Inference 的 TensorRT 子图引擎。
+说明：
+如果模型不支持通过 TensorRT 加速，即使设置了此标志，也不会使用加速。
+对于 CUDA 11.8 版本的飞桨，兼容的 TensorRT 版本为 8.x（x>=6），建议安装 TensorRT 8.6.1.6。
+bool
+False
+precision
+含义：
+计算精度，如
+fp32
+、
+fp16
+。
+str
+fp32
+enable_mkldnn
+含义：
+是否启用 MKL-DNN 加速推理。
+说明：
+如果 MKL-DNN 不可用或模型不支持通过 MKL-DNN 加速，即使设置了此标志，也不会使用加速。
+bool
+True
+mkldnn_cache_capacity
+含义：
+MKL-DNN 缓存容量。
+int
+10
+cpu_threads
+含义：
+在 CPU 上进行推理时使用的线程数。
+int
+10
+paddlex_config
+含义：
+PaddleX产线配置文件路径。
+str
+以下参数在2.x版本已经废弃，为方便之前版本使用者故列出
+参数
+参数说明
+参数类型
+默认值
+det_model_dir
+说明：
+已废弃，请参考
+text_detection_model_dir
+，且与新的参数不能同时指定。
+str
+det_limit_side_len
+说明：
+已废弃，请参考
+text_det_limit_side_len
+，且与新的参数不能同时指定。
+int
+det_limit_type
+说明：
+已废弃，请参考
+text_det_limit_type
+，且与新的参数不能同时指定。
+str
+det_db_thresh
+说明：
+已废弃，请参考
+text_det_thresh
+，且与新的参数不能同时指定。
+float
+det_db_box_thresh
+说明：
+已废弃，请参考
+text_det_box_thresh
+，且与新的参数不能同时指定。
+float
+det_db_unclip_ratio
+说明：
+已废弃，请参考
+text_det_unclip_ratio
+，且与新的参数不能同时指定。
+float
+rec_model_dir
+说明：
+已废弃，请参考
+text_recognition_model_dir
+，且与新的参数不能同时指定。
+str
+rec_batch_num
+说明：
+已废弃，请参考
+text_recognition_batch_size
+，且与新的参数不能同时指定。
+int
+use_angle_cls
+说明：
+已废弃，请参考
+use_textline_orientation
+，且与新的参数不能同时指定。
+bool
+cls_model_dir
+说明：
+已废弃，请参考
+textline_orientation_model_dir
+，且与新的参数不能同时指定。
+str
+cls_batch_num
+说明：
+已废弃，请参考
+textline_orientation_batch_size
+，且与新的参数不能同时指定。
+int
+运行结果会被打印到终端上：
+{
+'res'
+:
+{
+'input_path'
+:
+'./general_ocr_002.png'
+,
+'page_index'
+:
+None,
+'model_settings'
+:
+{
+'use_doc_preprocessor'
+:
+True,
+'use_textline_orientation'
+:
+False
+}
+,
+'doc_preprocessor_res'
+:
+{
+'input_path'
+:
+None,
+'page_index'
+:
+None,
+'model_settings'
+:
+{
+'use_doc_orientation_classify'
+:
+False,
+'use_doc_unwarping'
+:
+False
+}
+,
+'angle'
+:
+-1
+}
+,
+'dt_polys'
+:
+array
+([[[
+3
+,
+10
+]
+,
+...,
+[
+4
+,
+30
+]]
+,
+...,
+[[
+99
+,
+456
+]
+,
+...,
+[
+99
+,
+479
+]]]
+,
+dtype
+=
+int16
+)
+,
+'text_det_params'
+:
+{
+'limit_side_len'
+:
+736
+,
+'limit_type'
+:
+'min'
+,
+'thresh'
+:
+0
+.3,
+'max_side_limit'
+:
+4000
+,
+'box_thresh'
+:
+0
+.6,
+'unclip_ratio'
+:
+1
+.5
+}
+,
+'text_type'
+:
+'general'
+,
+'textline_orientation_angles'
+:
+array
+([
+-1,
+...,
+-1
+])
+,
+'text_rec_score_thresh'
+:
+0
+.0,
+'rec_texts'
+:
+[
+'www.997700'
+,
+''
+,
+'Cm'
+,
+'登机牌'
+,
+'BOARDING'
+,
+'PASS'
+,
+'CLASS'
+,
+'序号SERIAL NO.'
+,
+'座位号'
+,
+'SEAT NO.'
+,
+'航班FLIGHT'
+,
+'日期DATE'
+,
+'舱位'
+,
+''
+,
+'W'
+,
+'035'
+,
+'12F'
+,
+'MU2379'
+,
+'03DEc'
+,
+'始发地'
+,
+'FROM'
+,
+'登机口'
+,
+'GATE'
+,
+'登机时间BDT'
+,
+'目的地TO'
+,
+'福州'
+,
+'TAIYUAN'
+,
+'G11'
+,
+'FUZHOU'
+,
+'身份识别IDNO.'
+,
+'姓名NAME'
+,
+'ZHANGQIWEI'
+,
+'票号TKT NO.'
+,
+'张祺伟'
+,
+'票价FARE'
+,
+'ETKT7813699238489/1'
+,
+'登机口于起飞前10分钟关闭 GATESCL0SE10MINUTESBEFOREDEPARTURETIME'
+]
+,
+'rec_scores'
+:
+array
+([
+0
+.67634439,
+...,
+0
+.97416091
+])
+,
+'rec_polys'
+:
+array
+([[[
+3
+,
+10
+]
+,
+...,
+[
+4
+,
+30
+]]
+,
+...,
+[[
+99
+,
+456
+]
+,
+...,
+[
+99
+,
+479
+]]]
+,
+dtype
+=
+int16
+)
+,
+'rec_boxes'
+:
+array
+([[
+3
+,
+...,
+30
+]
+,
+...,
+[
+99
+,
+...,
+479
+]]
+,
+dtype
+=
+int16
+)}}
+若指定了
+save_path
+，则会保存可视化结果在
+save_path
+下。可视化结果如下：
+2.2 Python脚本方式集成
+¶
+命令行方式是为了快速体验查看效果，一般来说，在项目中，往往需要通过代码集成，您可以通过几行代码即可完成产线的快速推理，推理代码如下：
+from
+paddleocr
+import
+PaddleOCR
+# 默认使用 PP-OCRv6 模型
+ocr
+=
+PaddleOCR
+(
+use_doc_orientation_classify
+=
+False
+,
+# 通过 use_doc_orientation_classify 参数指定不使用文档方向分类模型
+use_doc_unwarping
+=
+False
+,
+# 通过 use_doc_unwarping 参数指定不使用文本图像矫正模型
+use_textline_orientation
+=
+False
+,
+# 通过 use_textline_orientation 参数指定不使用文本行方向分类模型
+)
+# ocr = PaddleOCR(lang="en") # 通过 lang 参数来使用英文模型
+# ocr = PaddleOCR(ocr_version="PP-OCRv5") # 通过 ocr_version 参数切换为 PP-OCRv5 版本
+# ocr = PaddleOCR(ocr_version="PP-OCRv4") # 通过 ocr_version 参数切换为 PP-OCRv4 版本
+# ocr = PaddleOCR(device="gpu") # 通过 device 参数使得在模型推理时使用 GPU
+# ocr = PaddleOCR(
+#     text_detection_model_name="PP-OCRv5_server_det",
+#     text_recognition_model_name="PP-OCRv5_server_rec",
+#     use_doc_orientation_classify=False,
+#     use_doc_unwarping=False,
+#     use_textline_orientation=False,
+# ) # 使用 PP-OCRv5 的 server 模型
+result
+=
+ocr
+.
+predict
+(
+"./general_ocr_002.png"
+)
+for
+res
+in
+result
+:
+res
+.
+print
+()
+res
+.
+save_to_img
+(
+"output"
+)
+res
+.
+save_to_json
+(
+"output"
+)
+上述代码默认使用本地推理引擎
+paddle_static
+。如需运行，请先参考
+飞桨框架安装说明
+安装 PaddlePaddle。
+如果选择
+transformers
+作为推理引擎，请先参考
+推理引擎文档
+完成 Transformers 环境配置，然后执行如下代码：
+from
+paddleocr
+import
+PaddleOCR
+# 默认使用 PP-OCRv6 模型
+ocr
+=
+PaddleOCR
+(
+use_doc_orientation_classify
+=
+False
+,
+# 通过 use_doc_orientation_classify 参数指定不使用文档方向分类模型
+use_doc_unwarping
+=
+False
+,
+# 通过 use_doc_unwarping 参数指定不使用文本图像矫正模型
+use_textline_orientation
+=
+False
+,
+# 通过 use_textline_orientation 参数指定不使用文本行方向分类模型
+engine
+=
+"transformers"
+,
+)
+# ocr = PaddleOCR(lang="en", engine="transformers") # 通过 lang 参数来使用英文模型
+# ocr = PaddleOCR(ocr_version="PP-OCRv5", engine="transformers") # 通过 ocr_version 参数切换为 PP-OCRv5 版本
+# ocr = PaddleOCR(ocr_version="PP-OCRv4", engine="transformers") # 通过 ocr_version 参数切换为 PP-OCRv4 版本
+# ocr = PaddleOCR(device="gpu", engine="transformers") # 通过 device 参数使得在模型推理时使用 GPU
+# ocr = PaddleOCR(
+#     text_detection_model_name="PP-OCRv5_server_det",
+#     text_recognition_model_name="PP-OCRv5_server_rec",
+#     use_doc_orientation_classify=False,
+#     use_doc_unwarping=False,
+#     use_textline_orientation=False,
+#     engine="transformers",
+# ) # 使用 PP-OCRv5 的 server 模型
+result
+=
+ocr
+.
+predict
+(
+"./general_ocr_002.png"
+)
+for
+res
+in
+result
+:
+res
+.
+print
+()
+res
+.
+save_to_img
+(
+"output"
+)
+res
+.
+save_to_json
+(
+"output"
+)
+如果选择
+onnxruntime
+作为推理引擎，请先参考
+推理引擎文档
+完成 ONNX Runtime 环境配置，然后执行如下代码：
+from
+paddleocr
+import
+PaddleOCR
+# 默认使用 PP-OCRv6 模型
+ocr
+=
+PaddleOCR
+(
+use_doc_orientation_classify
+=
+False
+,
+# 通过 use_doc_orientation_classify 参数指定不使用文档方向分类模型
+use_doc_unwarping
+=
+False
+,
+# 通过 use_doc_unwarping 参数指定不使用文本图像矫正模型
+use_textline_orientation
+=
+False
+,
+# 通过 use_textline_orientation 参数指定不使用文本行方向分类模型
+engine
+=
+"onnxruntime"
+,
+)
+# ocr = PaddleOCR(lang="en", engine="onnxruntime") # 通过 lang 参数来使用英文模型
+# ocr = PaddleOCR(ocr_version="PP-OCRv5", engine="onnxruntime") # 通过 ocr_version 参数切换为 PP-OCRv5 版本
+# ocr = PaddleOCR(ocr_version="PP-OCRv4", engine="onnxruntime") # 通过 ocr_version 参数切换为 PP-OCRv4 版本
+# ocr = PaddleOCR(device="gpu", engine="onnxruntime") # 通过 device 参数使得在模型推理时使用 GPU
+# ocr = PaddleOCR(
+#     text_detection_model_name="PP-OCRv5_server_det",
+#     text_recognition_model_name="PP-OCRv5_server_rec",
+#     use_doc_orientation_classify=False,
+#     use_doc_unwarping=False,
+#     use_textline_orientation=False,
+#     engine="onnxruntime",
+# ) # 使用 PP-OCRv5 的 server 模型
+result
+=
+ocr
+.
+predict
+(
+"./general_ocr_002.png"
+)
+for
+res
+in
+result
+:
+res
+.
+print
+()
+res
+.
+save_to_img
+(
+"output"
+)
+res
+.
+save_to_json
+(
+"output"
+)
+在大多数场景下，默认的
+paddle_static
+推理引擎通常具备更好的推理性能，建议优先使用。
+在上述 Python 脚本中，执行了如下几个步骤：
+（1）通过
+PaddleOCR()
+实例化 OCR 产线对象，具体参数说明如下：
+参数
+参数说明
+参数类型
+默认值
+doc_orientation_classify_model_name
+含义：
+文档方向分类模型的名称。
+说明：
+如果设置为
+None
+，将会使用产线默认模型。
+str|None
+None
+doc_orientation_classify_model_dir
+含义：
+文档方向分类模型的目录路径。
+说明：
+如果设置为
+None
+，将会下载官方模型。
+str|None
+None
+doc_unwarping_model_name
+含义：
+文本图像矫正模型的名称。
+说明：
+如果设置为
+None
+，将会使用产线默认模型。
+str|None
+None
+doc_unwarping_model_dir
+含义：
+文本图像矫正模型的目录路径。
+说明：
+如果设置为
+None
+，将会下载官方模型。
+str|None
+None
+text_detection_model_name
+含义：
+文本检测模型的名称。
+说明：
+如果设置为
+None
+，将会使用产线默认模型。
+str|None
+None
+text_detection_model_dir
+含义：
+文本检测模型的目录路径。
+说明：
+如果设置为
+None
+，将会下载官方模型。
+str|None
+None
+textline_orientation_model_name
+含义：
+文本行方向模型的名称。
+说明：
+如果设置为
+None
+，将会使用产线默认模型。
+str|None
+None
+textline_orientation_model_dir
+含义：
+文本行方向模型的目录路径。
+说明：
+如果设置为
+None
+，将会下载官方模型。
+str|None
+None
+textline_orientation_batch_size
+含义：
+文本行方向模型的batch size。
+说明：
+如果设置为
+None
+，将默认设置batch size为
+1
+。
+int|None
+None
+text_recognition_model_name
+含义：
+文本识别模型的名称。
+说明：
+如果设置为
+None
+，将会使用产线默认模型。
+str|None
+None
+text_recognition_model_dir
+含义：
+文本识别模型的目录路径。
+说明：
+如果设置为
+None
+，将会下载官方模型。
+str|None
+None
+text_recognition_batch_size
+含义：
+文本识别模型的batch size。
+说明：
+如果设置为
+None
+，将默认设置batch size为
+1
+。
+int|None
+None
+use_doc_orientation_classify
+含义：
+是否加载并使用文档方向分类模块。
+说明：
+如果设置为
+None
+，将使用产线初始化的该参数值，默认初始化为
+True
+。
+bool|None
+None
+use_doc_unwarping
+含义：
+是否加载并使用文本图像矫正模块。
+说明：
+如果设置为
+None
+，将使用产线初始化的该参数值，默认初始化为
+True
+。
+bool|None
+None
+use_textline_orientation
+含义：
+是否加载并使用文本行方向模块。
+说明：
+如果设置为
+None
+，将使用产线初始化的该参数值，默认初始化为
+True
+。
+bool|None
+None
+text_det_limit_side_len
+含义：
+文本检测的图像边长限制。
+说明：
+int
+：大于
+0
+的任意整数；
+None
+：如果设置为
+None
+，将使用产线初始化的该参数值，默认初始化为
+64
+。
+int|None
+None
+text_det_limit_type
+含义：
+文本检测的边长度限制类型。
+说明：
+str
+：支持
+min
+和
+max
+，
+min
+表示保证图像最短边不小于
+det_limit_side_len
+，
+max
+表示保证图像最长边不大于
+limit_side_len
+；
+None
+：如果设置为
+None
+，将使用产线初始化的该参数值，默认初始化为
+min
+。
+str|None
+None
+text_det_thresh
+含义：
+文本检测像素阈值，输出的概率图中，得分大于该阈值的像素点才会被认为是文字像素点。
+说明：
+float
+：大于
+0
+的任意浮点数；
+None
+：如果设置为
+None
+，将使用产线初始化的该参数值（默认为
+0.3
+）。
+float|None
+None
+text_det_box_thresh
+含义：
+文本检测框阈值，检测结果边框内，所有像素点的平均得分大于该阈值时，该结果会被认为是文字区域。
+说明：
+float
+：大于
+0
+的任意浮点数；
+None
+：如果设置为
+None
+，将使用产线初始化的该参数值（默认为
+0.6
+）。
+float|None
+None
+text_det_unclip_ratio
+含义：
+文本检测扩张系数，使用该方法对文字区域进行扩张，该值越大，扩张的面积越大。
+说明：
+float
+：大于
+0
+的任意浮点数；
+None
+：如果设置为
+None
+，将使用产线初始化的该参数值（默认为
+2.0
+）。
+float|None
+None
+text_det_input_shape
+含义：
+文本检测的输入形状。
+tuple|None
+None
+text_rec_score_thresh
+含义：
+文本识别阈值，得分大于该阈值的文本结果会被保留。
+说明：
+float
+：大于
+0
+的任意浮点数；
+None
+：如果设置为
+None
+，将使用产线初始化的该参数值（默认为
+0.0
+，即不设阈值）。
+float|None
+None
+text_rec_input_shape
+含义：
+文本识别的输入形状。
+tuple|None
+None
+lang
+含义：
+使用指定语言的 OCR 模型。
+说明：
+附录中的表格中列举了全部支持的语言。
+str|None
+None
+ocr_version
+含义：
+OCR 模型版本。
+说明：
+PP-OCRv6
+：使用PP-OCRv6系列模型；
+PP-OCRv5
+：使用PP-OCRv5系列模型；
+PP-OCRv4
+：使用PP-OCRv4系列模型；
+PP-OCRv3
+：使用PP-OCRv3系列模型。
+注意不是每个
+ocr_version
+都支持所有的
+lang
+，请查看附录中的对应关系表。
+str|None
+None
+device
+含义：
+用于推理的设备。
+说明：
+支持指定具体卡号：
+CPU
+：如
+cpu
+表示使用 CPU 进行推理；
+GPU
+：如
+gpu:0
+表示使用第 1 块 GPU 进行推理；
+NPU
+：如
+npu:0
+表示使用第 1 块 NPU 进行推理；
+XPU
+：如
+xpu:0
+表示使用第 1 块 XPU 进行推理；
+MLU
+：如
+mlu:0
+表示使用第 1 块 MLU 进行推理；
+DCU
+：如
+dcu:0
+表示使用第 1 块 DCU 进行推理；
+沐曦 GPU
+：如
+metax_gpu:0
+表示使用第 1 块沐曦 GPU 进行推理；
+天数 GPU
+：如
+iluvatar_gpu:0
+表示使用第 1 块天数 GPU 进行推理；
+None
+：如果设置为
+None
+，将默认使用产线初始化的该参数值，初始化时，会优先使用本地的 GPU 0号设备，如果没有，则使用 CPU 设备。
+str|None
+None
+engine
+含义：
+推理引擎。
+说明：
+支持
+None
+（默认值）、
+paddle
+、
+paddle_static
+、
+paddle_dynamic
+、
+transformers
+。保持为默认值
+None
+时，PaddleOCR 保留旧版本的行为，在大多数配置下等价于
+paddle
+。详细说明、取值、兼容性规则与示例请参见
+推理引擎与配置说明
+。
+str|None
+None
+engine_config
+含义：
+推理引擎配置。
+说明：
+推荐与
+engine
+搭配使用。详细字段、兼容性规则与示例请参见
+推理引擎与配置说明
+。
+dict|None
+None
+enable_hpi
+含义：
+是否启用高性能推理。
+bool
+None
+use_tensorrt
+含义：
+是否启用 Paddle Inference 的 TensorRT 子图引擎。
+说明：
+如果模型不支持通过 TensorRT 加速，即使设置了此标志，也不会使用加速。
+对于 CUDA 11.8 版本的飞桨，兼容的 TensorRT 版本为 8.x（x>=6），建议安装 TensorRT 8.6.1.6。
+bool
+False
+precision
+含义：
+计算精度，如
+"fp32"
+、
+"fp16"
+。
+str
+"fp32"
+enable_mkldnn
+含义：
+是否启用 MKL-DNN 加速推理。
+说明：
+如果 MKL-DNN 不可用或模型不支持通过 MKL-DNN 加速，即使设置了此标志，也不会使用加速。
+bool
+True
+mkldnn_cache_capacity
+含义：
+MKL-DNN 缓存容量。
+int
+10
+cpu_threads
+含义：
+在 CPU 上进行推理时使用的线程数。
+int
+10
+paddlex_config
+含义：
+PaddleX产线配置文件路径。
+str|None
+None
+（2）调用 OCR 产线对象的
+predict()
+方法进行推理预测，该方法会返回一个结果列表。另外，产线还提供了
+predict_iter()
+方法。两者在参数接受和结果返回方面是完全一致的，区别在于
+predict_iter()
+返回的是一个
+generator
+，能够逐步处理和获取预测结果，适合处理大型数据集或希望节省内存的场景。可以根据实际需求选择使用这两种方法中的任意一种。以下是
+predict()
+方法的参数及其说明：
+参数
+参数说明
+参数类型
+默认值
+input
+含义：
+待预测数据
+说明：
+支持多种输入类型，必填。
+Python Var
+：如
+numpy.ndarray
+表示的图像数据；
+str
+：如图像文件或者PDF文件的本地路径：
+/root/data/img.jpg
+；
+如URL链接
+，如图像文件或PDF文件的网络URL：
+示例
+；
+如本地目录
+，该目录下需包含待预测图像，如本地路径：
+/root/data/
+(当前不支持目录中包含PDF文件的预测，PDF文件需要指定到具体文件路径)；
+list
+：列表元素需为上述类型数据，如
+[numpy.ndarray, numpy.ndarray]
+，
+["/root/data/img1.jpg", "/root/data/img2.jpg"]
+，
+["/root/data1", "/root/data2"]。
+Python Var|str|list
+use_doc_orientation_classify
+含义：
+是否在推理时使用文档方向分类模块。
+bool|None
+None
+use_doc_unwarping
+含义：
+是否在推理时使用文本图像矫正模块。
+bool|None
+None
+use_textline_orientation
+含义：
+是否在推理时使用文本行方向分类模块。
+bool|None
+None
+text_det_limit_side_len
+含义：
+参数含义与实例化参数基本相同。
+说明：
+设置为
+None
+表示使用实例化参数，否则该参数优先级更高。
+int|None
+None
+text_det_limit_type
+含义：
+参数含义与实例化参数基本相同。
+说明：
+设置为
+None
+表示使用实例化参数，否则该参数优先级更高。
+str|None
+None
+text_det_thresh
+含义：
+参数含义与实例化参数基本相同。
+说明：
+设置为
+None
+表示使用实例化参数，否则该参数优先级更高。
+float|None
+None
+text_det_box_thresh
+含义：
+参数含义与实例化参数基本相同。
+说明：
+设置为
+None
+表示使用实例化参数，否则该参数优先级更高。
+float|None
+None
+text_det_unclip_ratio
+含义：
+参数含义与实例化参数基本相同。
+说明：
+设置为
+None
+表示使用实例化参数，否则该参数优先级更高。
+float|None
+None
+text_rec_score_thresh
+含义：
+参数含义与实例化参数基本相同。
+说明：
+设置为
+None
+表示使用实例化参数，否则该参数优先级更高。
+float|None
+None
+（3）对预测结果进行处理，每个样本的预测结果均为对应的Result对象，且支持打印、保存为图片、保存为
+json
+文件的操作:
+方法
+方法说明
+参数
+参数类型
+参数说明
+默认值
+print()
+打印结果到终端
+format_json
+bool
+是否对输出内容进行使用
+JSON
+缩进格式化。
+True
+indent
+int
+指定缩进级别，以美化输出的
+JSON
+数据，使其更具可读性，仅当
+format_json
+为
+True
+时有效。
+4
+ensure_ascii
+bool
+控制是否将非
+ASCII
+字符转义为
+Unicode
+。设置为
+True
+时，所有非
+ASCII
+字符将被转义；
+False
+则保留原始字符，仅当
+format_json
+为
+True
+时有效。
+False
+save_to_json()
+将结果保存为json格式的文件
+save_path
+str
+保存的文件路径，当为目录时，保存文件命名与输入文件类型命名一致。
+无
+indent
+int
+指定缩进级别，以美化输出的
+JSON
+数据，使其更具可读性，仅当
+format_json
+为
+True
+时有效。
+4
+ensure_ascii
+bool
+控制是否将非
+ASCII
+字符转义为
+Unicode
+。设置为
+True
+时，所有非
+ASCII
+字符将被转义；
+False
+则保留原始字符，仅当
+format_json
+为
+True
+时有效。
+False
+save_to_img()
+将结果保存为图像格式的文件
+save_path
+str
+保存的文件路径，支持目录或文件路径。
+无
+调用
+print()
+方法会将结果打印到终端，打印到终端的内容解释如下：
+input_path
+:
+(str)
+待预测图像的输入路径
+page_index
+:
+(Union[int, None])
+如果输入是PDF文件，则表示当前是PDF的第几页，否则为
+None
+model_settings
+:
+(Dict[str, bool])
+配置产线所需的模型参数
+use_doc_preprocessor
+:
+(bool)
+控制是否启用文档预处理子产线
+use_textline_orientation
+:
+(bool)
+控制是否启用文本行方向分类模块
+doc_preprocessor_res
+:
+(Dict[str, Union[str, Dict[str, bool], int]])
+文档预处理子产线的输出结果。仅当
+use_doc_preprocessor=True
+时存在
+input_path
+:
+(Union[str, None])
+图像预处理子产线接受的图像路径，当输入为
+numpy.ndarray
+时，保存为
+None
+model_settings
+:
+(Dict)
+预处理子产线的模型配置参数
+use_doc_orientation_classify
+:
+(bool)
+控制是否启用文档方向分类
+use_doc_unwarping
+:
+(bool)
+控制是否启用文本图像矫正
+angle
+:
+(int)
+文档方向分类的预测结果。启用时取值为[0,1,2,3]，分别对应[0°,90°,180°,270°]；未启用时为-1
+dt_polys
+:
+(List[numpy.ndarray])
+文本检测的多边形框列表。每个检测框由4个顶点坐标构成的numpy数组表示，数组shape为(4, 2)，数据类型为int16
+dt_scores
+:
+(List[float])
+文本检测框的置信度列表
+text_det_params
+:
+(Dict[str, Dict[str, int, float]])
+文本检测模块的配置参数
+limit_side_len
+:
+(int)
+图像预处理时的边长限制值
+limit_type
+:
+(str)
+边长限制的处理方式
+thresh
+:
+(float)
+文本像素分类的置信度阈值
+box_thresh
+:
+(float)
+文本检测框的置信度阈值
+unclip_ratio
+:
+(float)
+文本检测框的膨胀系数
+text_type
+:
+(str)
+文本检测的类型，当前固定为"general"
+textline_orientation_angles
+:
+(List[int])
+文本行方向分类的预测结果。启用时返回实际角度值（如[0,0,1]），未启用时返回[-1,-1,-1]
+text_rec_score_thresh
+:
+(float)
+文本识别结果的过滤阈值
+rec_texts
+:
+(List[str])
+文本识别结果列表，仅包含置信度超过
+text_rec_score_thresh
+的文本
+rec_scores
+:
+(List[float])
+文本识别的置信度列表，已按
+text_rec_score_thresh
+过滤
+rec_polys
+:
+(List[numpy.ndarray])
+经过置信度过滤的文本检测框列表，格式同
+dt_polys
+rec_boxes
+:
+(numpy.ndarray)
+检测框的矩形边界框数组，shape为(n, 4)，dtype为int16。每一行表示一个矩形框的[x_min, y_min, x_max, y_max]坐标，其中(x_min, y_min)为左上角坐标，(x_max, y_max)为右下角坐标
+调用
+save_to_json()
+方法会将上述内容保存到指定的
+save_path
+中，如果指定为目录，则保存的路径为
+save_path/{your_img_basename}_res.json
+，如果指定为文件，则直接保存到该文件中。由于json文件不支持保存numpy数组，因此会将其中的
+numpy.array
+类型转换为列表形式。
+调用
+save_to_img()
+方法会将可视化结果保存到指定的
+save_path
+中，如果指定为目录，则保存的路径为
+save_path/{your_img_basename}_ocr_res_img.{your_img_extension}
+，如果指定为文件，则直接保存到该文件中。(产线通常包含较多结果图片，不建议直接指定为具体的文件路径，否则多张图会被覆盖，仅保留最后一张图)
+此外，也支持通过属性获取带结果的可视化图像和预测结果，具体如下：
+属性
+属性说明
+json
+获取预测的
+json
+格式的结果
+img
+获取格式为
+dict
+的可视化图像
+json
+属性获取的预测结果为dict类型的数据，相关内容与调用
+save_to_json()
+方法保存的内容一致。
+img
+属性返回的预测结果是一个dict类型的数据。其中，键分别为
+ocr_res_img
+和
+preprocessed_img
+，对应的值是两个
+Image.Image
+对象：一个用于显示 OCR 结果的可视化图像，另一个用于展示图像预处理的可视化图像。如果没有使用图像预处理子模块，则dict中只包含
+ocr_res_img
+。
+3. 开发集成/部署
+¶
+如果通用 OCR 产线可以达到您对产线推理速度和精度的要求，您可以直接进行开发集成/部署。
+若您需要将通用 OCR 产线直接应用在您的Python项目中，可以参考
+2.2 Python脚本方式集成
+中的示例代码。
+此外，PaddleOCR 也提供了其他两种部署方式，详细说明如下：
+🚀 高性能推理：在实际生产环境中，许多应用对部署策略的性能指标（尤其是响应速度）有着较严苛的标准，以确保系统的高效运行与用户体验的流畅性。为此，PaddleOCR 提供高性能推理功能，旨在对模型推理及前后处理进行深度性能优化，实现端到端流程的显著提速，详细的高性能推理流程请参考
+高性能推理
+。
+☁️ 服务化部署：服务化部署是实际生产环境中常见的一种部署形式。通过将推理功能封装为服务，客户端可以通过网络请求来访问这些服务，以获取推理结果。详细的产线服务化部署流程请参考
+服务化部署
+。
+以下是基础服务化部署的API参考与多语言服务调用示例：
+API参考
+对于服务提供的主要操作：
+HTTP请求方法为POST。
+请求体和响应体均为JSON数据（JSON对象）。
+当请求处理成功时，响应状态码为
+200
+，响应体的属性如下：
+名称
+类型
+含义
+logId
+string
+请求的UUID。
+errorCode
+integer
+错误码。固定为
+0
+。
+errorMsg
+string
+错误说明。固定为
+"Success"
+。
+result
+object
+操作结果。
+当请求处理未成功时，响应体的属性如下：
+名称
+类型
+含义
+logId
+string
+请求的UUID。
+errorCode
+integer
+错误码。与响应状态码相同。
+errorMsg
+string
+错误说明。
+服务提供的主要操作如下：
+infer
+获取图像OCR结果。
+POST /ocr
+请求体的属性如下：
+名称
+类型
+含义
+是否必填
+file
+string
+服务器可访问的图像文件（含 TIFF，多页时按页处理）或 PDF 文件的 URL，或上述类型文件内容的 Base64 编码结果。默认对于超过 10 页的 PDF 或多页 TIFF，仅处理前 10 页。
+要解除页数限制，请在产线配置文件中添加以下配置：
+Serving:
+extra:
+max_num_input_imgs: null
+是
+fileType
+integer
+|
+null
+文件类型。
+0
+表示 PDF 文件，
+1
+表示图像文件（含 TIFF）。若请求体无此属性，则将根据URL推断文件类型。
+否
+useDocOrientationClassify
+boolean
+|
+null
+请参阅产线对象中
+predict
+方法的
+use_doc_orientation_classify
+参数相关说明。
+否
+useDocUnwarping
+boolean
+|
+null
+请参阅产线对象中
+predict
+方法的
+use_doc_unwarping
+参数相关说明。
+否
+useTextlineOrientation
+boolean
+|
+null
+请参阅产线对象中
+predict
+方法的
+use_textline_orientation
+参数相关说明。
+否
+textDetLimitSideLen
+integer
+|
+null
+请参阅产线对象中
+predict
+方法的
+text_det_limit_side_len
+参数相关说明。
+否
+textDetLimitType
+string
+|
+null
+请参阅产线对象中
+predict
+方法的
+text_det_limit_type
+参数相关说明。
+否
+textDetThresh
+number
+|
+null
+请参阅产线对象中
+predict
+方法的
+text_det_thresh
+参数相关说明。
+否
+textDetBoxThresh
+number
+|
+null
+请参阅产线对象中
+predict
+方法的
+text_det_box_thresh
+参数相关说明。
+否
+textDetUnclipRatio
+number
+|
+null
+请参阅产线对象中
+predict
+方法的
+text_det_unclip_ratio
+参数相关说明。
+否
+textRecScoreThresh
+number
+|
+null
+请参阅产线对象中
+predict
+方法的
+text_rec_score_thresh
+参数相关说明。
+否
+visualize
+boolean
+|
+null
+是否返回可视化结果图以及处理过程中的中间图像等。
+传入
+true
+：返回图像。
+传入
+false
+：不返回图像。
+若请求体中未提供该参数或传入
+null
+：遵循产线配置文件
+Serving.visualize
+的设置。
+例如，在产线配置文件中添加如下字段：
+Serving:
+visualize: False
+将默认不返回图像，通过请求体中的
+visualize
+参数可以覆盖默认行为。如果请求体和配置文件中均未设置（或请求体传入
+null
+、配置文件中未设置），则默认返回图像。
+否
+请求处理成功时，响应体的
+result
+具有如下属性：
+名称
+类型
+含义
+ocrResults
+object
+OCR结果。数组长度为1（对于图像输入）或实际处理的文档页数（对于PDF输入）。对于PDF输入，数组中的每个元素依次表示PDF文件中实际处理的每一页的结果。
+dataInfo
+object
+输入数据信息。
+下表中涉及图像的字段（如
+ocrImage
+、
+docPreprocessingImage
+、
+inputImage
+）默认以 Base64 字符串内联返回；当服务端开启 URL 返回模式时，相应字段的值变为预签名 URL，字段类型保持不变。配置方式参见
+服务化部署
+「以 URL 形式返回二进制内容」一节。
+ocrResults
+中的每个元素为一个
+object
+，具有如下属性：
+名称
+类型
+含义
+prunedResult
+object
+产线对象的
+predict
+方法生成结果的 JSON 表示中
+res
+字段的简化版本，其中去除了
+input_path
+和
+page_index
+字段。
+ocrImage
+string
+|
+null
+OCR结果图，其中标注检测到的文本位置。图像为JPEG格式，使用Base64编码；启用 URL 返回模式时为预签名 URL。
+docPreprocessingImage
+string
+|
+null
+可视化结果图像。图像为JPEG格式，使用Base64编码；启用 URL 返回模式时为预签名 URL。
+inputImage
+string
+|
+null
+输入图像。图像为JPEG格式，使用Base64编码；启用 URL 返回模式时为预签名 URL。
+多语言调用服务示例
+Python
+import base64
+import requests
+API_URL = "http://localhost:8080/ocr"
+file_path = "./demo.jpg"
+with open(file_path, "rb") as file:
+file_bytes = file.read()
+file_data = base64.b64encode(file_bytes).decode("ascii")
+payload = {"file": file_data, "fileType": 1}
+response = requests.post(API_URL, json=payload)
+assert response.status_code == 200
+result = response.json()["result"]
+for i, res in enumerate(result["ocrResults"]):
+print(res["prunedResult"])
+ocr_img_path = f"ocr_{i}.jpg"
+with open(ocr_img_path, "wb") as f:
+f.write(base64.b64decode(res["ocrImage"]))
+print(f"Output image saved at {ocr_img_path}")
+C++
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include "cpp-httplib/httplib.h" // https://github.com/Huiyicc/cpp-httplib
+#include "nlohmann/json.hpp" // https://github.com/nlohmann/json
+#include "base64.hpp" // https://github.com/tobiaslocker/base64
+int main() {
+httplib::Client client("localhost", 8080);
+const std::string filePath = "./demo.jpg";
+std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+if (!file) {
+std::cerr
+buffer(size);
+if (!file.read(buffer.data(), size)) {
+std::cerr
+(size));
+std::string encodedFile = base64::to_base64(bufferStr);
+nlohmann::json jsonObj;
+jsonObj["file"] = encodedFile;
+jsonObj["fileType"] = 1;
+auto response = client.Post("/ocr", jsonObj.dump(), "application/json");
+if (response && response->status == 200) {
+nlohmann::json jsonResponse = nlohmann::json::parse(response->body);
+auto result = jsonResponse["result"];
+if (!result.is_object() || !result["ocrResults"].is_array()) {
+std::cerr
+(decodedImage.size()));
+outputImage.close();
+std::cout
+status
+body
+Java
+import okhttp3.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+public class Main {
+public static void main(String[] args) throws IOException {
+String API_URL = "http://localhost:8080/ocr";
+String imagePath = "./demo.jpg";
+File file = new File(imagePath);
+byte[] fileContent = java.nio.file.Files.readAllBytes(file.toPath());
+String base64Image = Base64.getEncoder().encodeToString(fileContent);
+ObjectMapper objectMapper = new ObjectMapper();
+ObjectNode payload = objectMapper.createObjectNode();
+payload.put("file", base64Image);
+payload.put("fileType", 1);
+OkHttpClient client = new OkHttpClient();
+MediaType JSON = MediaType.get("application/json; charset=utf-8");
+RequestBody body = RequestBody.create(JSON, payload.toString());
+Request request = new Request.Builder()
+.url(API_URL)
+.post(body)
+.build();
+try (Response response = client.newCall(request).execute()) {
+if (response.isSuccessful()) {
+String responseBody = response.body().string();
+JsonNode root = objectMapper.readTree(responseBody);
+JsonNode result = root.get("result");
+JsonNode ocrResults = result.get("ocrResults");
+for (int i = 0; i
+Go
+package main
+import (
+"bytes"
+"encoding/base64"
+"encoding/json"
+"fmt"
+"io/ioutil"
+"net/http"
+)
+func main() {
+API_URL := "http://localhost:8080/ocr"
+filePath := "./demo.jpg"
+fileBytes, err := ioutil.ReadFile(filePath)
+if err != nil {
+fmt.Printf("Error reading file: %v\n", err)
+return
+}
+fileData := base64.StdEncoding.EncodeToString(fileBytes)
+payload := map[string]interface{}{
+"file":     fileData,
+"fileType": 1,
+}
+payloadBytes, err := json.Marshal(payload)
+if err != nil {
+fmt.Printf("Error marshaling payload: %v\n", err)
+return
+}
+client := &http.Client{}
+req, err := http.NewRequest("POST", API_URL, bytes.NewBuffer(payloadBytes))
+if err != nil {
+fmt.Printf("Error creating request: %v\n", err)
+return
+}
+req.Header.Set("Content-Type", "application/json")
+res, err := client.Do(req)
+if err != nil {
+fmt.Printf("Error sending request: %v\n", err)
+return
+}
+defer res.Body.Close()
+if res.StatusCode != http.StatusOK {
+fmt.Printf("Unexpected status code: %d\n", res.StatusCode)
+return
+}
+body, err := ioutil.ReadAll(res.Body)
+if err != nil {
+fmt.Printf("Error reading response body: %v\n", err)
+return
+}
+type OcrResult struct {
+PrunedResult map[string]interface{} `json:"prunedResult"`
+OcrImage     *string                `json:"ocrImage"`
+}
+type Response struct {
+Result struct {
+OcrResults []OcrResult `json:"ocrResults"`
+DataInfo   interface{} `json:"dataInfo"`
+} `json:"result"`
+}
+var respData Response
+if err := json.Unmarshal(body, &respData); err != nil {
+fmt.Printf("Error unmarshaling response: %v\n", err)
+return
+}
+for i, res := range respData.Result.OcrResults {
+if res.OcrImage != nil {
+imgBytes, err := base64.StdEncoding.DecodeString(*res.OcrImage)
+if err != nil {
+fmt.Printf("Error decoding image %d: %v\n", i, err)
+continue
+}
+filename := fmt.Sprintf("ocr_%d.jpg", i)
+if err := ioutil.WriteFile(filename, imgBytes, 0644); err != nil {
+fmt.Printf("Error saving image %s: %v\n", filename, err)
+continue
+}
+fmt.Printf("Output image saved at %s\n", filename)
+}
+}
+}
+C#
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+class Program
+{
+static readonly string API_URL = "http://localhost:8080/ocr";
+static readonly string inputFilePath = "./demo.jpg";
+static async Task Main(string[] args)
+{
+var httpClient = new HttpClient();
+byte[] fileBytes = File.ReadAllBytes(inputFilePath);
+string fileData = Convert.ToBase64String(fileBytes);
+var payload = new JObject
+{
+{ "file", fileData },
+{ "fileType", 1 }
+};
+var content = new StringContent(payload.ToString(), Encoding.UTF8, "application/json");
+HttpResponseMessage response = await httpClient.PostAsync(API_URL, content);
+response.EnsureSuccessStatusCode();
+string responseBody = await response.Content.ReadAsStringAsync();
+JObject jsonResponse = JObject.Parse(responseBody);
+JArray ocrResults = (JArray)jsonResponse["result"]["ocrResults"];
+for (int i = 0; i
+Node.js
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const API_URL = 'http://localhost:8080/layout-parsing';
+const imagePath = './demo.jpg';
+const fileType = 1;
+function encodeImageToBase64(filePath) {
+const bitmap = fs.readFileSync(filePath);
+return Buffer.from(bitmap).toString('base64');
+}
+const payload = {
+file: encodeImageToBase64(imagePath),
+fileType: fileType
+};
+axios.post(API_URL, payload)
+.then(response => {
+const results = response.data.result.layoutParsingResults;
+results.forEach((res, index) => {
+console.log(`\n[${index}] prunedResult:`);
+console.log(res.prunedResult);
+const outputImages = res.outputImages;
+if (outputImages) {
+Object.entries(outputImages).forEach(([imgName, base64Img]) => {
+const imgPath = `${imgName}_${index}.jpg`;
+fs.writeFileSync(imgPath, Buffer.from(base64Img, 'base64'));
+console.log(`Output image saved at ${imgPath}`);
+});
+} else {
+console.log(`[${index}] No outputImages.`);
+}
+});
+})
+.catch(error => {
+console.error('Error during API request:', error.message || error);
+});
+PHP
+<?php
+$API_URL = "http://localhost:8080/ocr";
+$image_path = "./demo.jpg";
+$image_data = base64_encode(file_get_contents($image_path));
+$payload = array(
+"file" => $image_data,
+"fileType" => 1
+);
+$ch = curl_init($API_URL);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+$result = json_decode($response, true)["result"]["ocrResults"];
+foreach ($result as $i => $item) {
+echo "[$i] prunedResult:\n";
+print_r($item["prunedResult"]);
+if (!empty($item["ocrImage"])) {
+$output_img_path = "ocr_{$i}.jpg";
+file_put_contents($output_img_path, base64_decode($item["ocrImage"]));
+echo "OCR image saved at $output_img_path\n";
+} else {
+echo "No ocrImage found for item $i\n";
+}
+}
+?>
+4. 二次开发
+¶
+如果 通用OCR 产线提供的默认模型权重在您的场景中，精度或速度不满意，您可以尝试利用
+您自己拥有的特定领域或应用场景的数据
+对现有模型进行进一步的
+微调
+，以提升 通用OCR 产线的在您的场景中的识别效果。
+4.1 模型微调
+¶
+通用 OCR 产线包含若干模块，模型产线的效果如果不及预期，可能来自于其中任何一个模块。您可以对识别效果差的图片进行分析，进而确定是哪个模块存在问题，并参考以下表格中对应的微调教程链接进行模型微调。
+情形
+微调模块
+微调参考链接
+整图旋转矫正不准
+文档图像方向分类模块
+链接
+图像扭曲矫正不准
+文本图像矫正模块
+暂不支持微调
+文本行旋转矫正不准
+文本行方向分类模块
+链接
+文本漏检
+文本检测模块
+链接
+文本内容不准
+文本识别模块
+链接
+4.2 模型应用
+¶
+当您使用私有数据集完成微调训练后，可获得本地模型权重文件，然后可以通过参数指定本地模型保存路径的方式，或者通过自定义产线配置文件的方式，使用微调后的模型权重。
+4.2.1 通过参数指定本地模型路径
+¶
+在初始化产线对象时，通过参数指定本地模型路径。以文本检测模型微调后的权重的使用方法为例，示例如下：
+命令行方式:
+# 通过 --text_detection_model_dir 指定本地模型路径
+paddleocr
+ocr
+-i
+./general_ocr_002.png
+--text_detection_model_dir
+your_det_model_path
+# 通过 --text_detection_model_name 修改模型名称
+paddleocr
+ocr
+-i
+./general_ocr_002.png
+--text_detection_model_name
+PP-OCRv5_mobile_det
+--text_detection_model_dir
+your_v5_mobile_det_model_path
+脚本方式：
+from
+paddleocr
+import
+PaddleOCR
+# 通过 text_detection_model_dir 指定本地模型路径
+pipeline
+=
+PaddleOCR
+(
+text_detection_model_dir
+=
+"./your_det_model_path"
+)
+# 通过 text_detection_model_name 修改模型名称
+# pipeline = PaddleOCR(text_detection_model_name="PP-OCRv5_mobile_det", text_detection_model_dir="./your_v5_mobile_det_model_path")
+4.2.2 通过配置文件指定本地模型路径
+¶
+1.获取产线配置文件
+可调用 PaddleOCR 中 通用 OCR 产线对象的
+export_paddlex_config_to_yaml
+方法，将当前产线配置导出为 YAML 文件：
+from
+paddleocr
+import
+PaddleOCR
+pipeline
+=
+PaddleOCR
+()
+pipeline
+.
+export_paddlex_config_to_yaml
+(
+"PaddleOCR.yaml"
+)
+2.修改配置文件
+在得到默认的产线配置文件后，将微调后模型权重的本地路径替换至产线配置文件中的对应位置即可。例如
+......
+SubModules
+:
+TextDetection
+:
+box_thresh
+:
+0.6
+limit_side_len
+:
+64
+limit_type
+:
+min
+max_side_limit
+:
+4000
+model_dir
+:
+null
+# 替换为微调后的文本测模型权重路径
+model_name
+:
+PP-OCRv6_medium_det
+# 如果微调的模型名称与默认模型名称不同，请一并修改此处
+module_name
+:
+text_detection
+thresh
+:
+0.3
+unclip_ratio
+:
+1.5
+TextLineOrientation
+:
+batch_size
+:
+6
+model_dir
+:
+null
+# 替换为微调后的文本行方向分类模型权重路径
+model_name
+:
+PP-LCNet_x1_0_textline_ori
+# 如果微调的模型名称与默认模型名称不同，请一并修改此处
+module_name
+:
+textline_orientation
+TextRecognition
+:
+batch_size
+:
+6
+model_dir
+:
+null
+# 替换为微调后的文本识模型权重路径
+model_name
+:
+PP-OCRv6_medium_rec
+# 如果微调的模型名称与默认模型名称不同，请一并修改此处
+module_name
+:
+text_recognition
+score_thresh
+:
+0.0
+......
+在产线配置文件中，不仅包含 PaddleOCR CLI 和 Python API 支持的参数，还可进行更多高级配置，具体信息可在
+PaddleX模型产线使用概览
+中找到对应的产线使用教程，参考其中的详细说明，根据需求调整各项配置。
+3.在 CLI 中加载产线配置文件
+在修改完成配置文件后，通过命令行的
+--paddlex_config
+参数指定修改后的产线配置文件的路径，PaddleOCR 会读取其中的内容作为产线配置。示例如下：
+paddleocr
+ocr
+--paddlex_config
+PaddleOCR.yaml
+...
+4.在 Python API 中加载产线配置文件
+初始化产线对象时，可通过
+paddlex_config
+参数传入 PaddleX 产线配置文件路径或配置dict，PaddleOCR 会读取其中的内容作为产线配置。示例如下：
+from
+paddleocr
+import
+PaddleOCR
+pipeline
+=
+PaddleOCR
+(
+paddlex_config
+=
+"PaddleOCR.yaml"
+)
+5. 附录
+¶
+支持语言
+lang
+语言名称
+abq
+阿布哈兹文
+af
+南非荷兰文
+ang
+古英文
+ar
+阿拉伯文
+ava
+阿瓦尔文
+az
+阿塞拜疆文
+be
+白俄罗斯文
+bg
+保加利亚文
+bgc
+哈里亚纳文
+bh
+比哈尔文
+bho
+博杰普尔文
+bs
+波斯尼亚文
+ch
+简体中文
+che
+车臣文
+chinese_cht
+繁体中文
+cs
+捷克文
+cy
+威尔士文
+da
+丹麦文
+dar
+达尔格瓦文
+de
+or
+german
+德文
+en
+英文
+es
+西班牙文
+et
+爱沙尼亚文
+fa
+波斯文
+fr
+or
+french
+法文
+ga
+爱尔兰文
+gom
+孔卡尼文
+hi
+印地文
+hr
+克罗地亚文
+hu
+匈牙利文
+id
+印尼文
+inh
+印古什文
+is
+冰岛文
+it
+意大利文
+japan
+日文
+ka
+格鲁吉亚文
+kbd
+卡巴尔达文
+korean
+韩文
+ku
+库尔德文
+la
+拉丁文
+lbe
+拉克文
+lez
+列兹金文
+lt
+立陶宛文
+lv
+拉脱维亚文
+mah
+马加希文
+mai
+迈蒂利文
+mi
+毛利文
+mn
+蒙古文
+mr
+马拉地文
+ms
+马来文
+mt
+马耳他文
+ne
+尼泊尔文
+new
+尼瓦尔文
+nl
+荷兰文
+no
+挪威文
+oc
+奥克文
+pi
+巴利文
+pl
+波兰文
+pt
+葡萄牙文
+ro
+罗马尼亚文
+rs_cyrillic
+塞尔维亚语西里尔字母
+rs_latin
+塞尔维亚语拉丁字母
+ru
+俄文
+sa
+梵文
+sck
+萨达里文
+sk
+斯洛伐克文
+sl
+斯洛文尼亚文
+sq
+阿尔巴尼亚文
+sv
+瑞典文
+sw
+斯瓦希里文
+tab
+塔巴萨兰文
+ta
+泰米尔文
+te
+泰卢固文
+tl
+塔加洛文
+tr
+土耳其文
+ug
+维吾尔文
+uk
+乌克兰文
+ur
+乌尔都文
+uz
+乌兹别克文
+vi
+越南文
+OCR模型版本与支持语言的对应关系
+ocr_version
+Supported
+lang
+PP-OCRv6
+ch
+,
+chinese_cht
+,
+en
+,
+japan
+,
+af
+,
+az
+,
+bs
+,
+ca
+,
+cs
+,
+cy
+,
+da
+,
+de
+,
+es
+,
+et
+,
+eu
+,
+fi
+,
+fr
+,
+ga
+,
+gl
+,
+hr
+,
+hu
+,
+id
+,
+is
+,
+it
+,
+ku
+,
+la
+,
+lb
+,
+lt
+,
+lv
+,
+mi
+,
+ms
+,
+mt
+,
+nl
+,
+no
+,
+oc
+,
+pl
+,
+pt
+,
+qu
+,
+rm
+,
+ro
+,
+rs_latin
+,
+sk
+,
+sl
+,
+sq
+,
+sv
+,
+sw
+,
+tl
+,
+tr
+,
+uz
+,
+vi
+,
+french
+,
+german
+。
+PP-OCRv6_tiny
+不支持
+japan
+，需显式指定
+PP-OCRv6_tiny_det
+/
+PP-OCRv6_tiny_rec
+。
+PP-OCRv5
+ch
+,
+en
+,
+fr
+,
+de
+,
+japan
+,
+korean
+,
+chinese_cht
+,
+af
+,
+it
+,
+es
+,
+bs
+,
+pt
+,
+cs
+,
+cy
+,
+da
+,
+et
+,
+ga
+,
+hr
+,
+hu
+,
+rslatin
+,
+id
+,
+oc
+,
+is
+,
+lt
+,
+mi
+,
+ms
+,
+nl
+,
+no
+,
+pl
+,
+sk
+,
+sl
+,
+sq
+,
+sv
+,
+sw
+,
+tl
+,
+tr
+,
+uz
+,
+la
+,
+ru
+,
+be
+,
+uk
+,
+th
+,
+el
+,
+az
+,
+ku
+,
+lv
+,
+mt
+,
+pi
+,
+ro
+,
+vi
+,
+fi
+,
+eu
+,
+gl
+,
+lb
+,
+rm
+,
+ca
+,
+qu
+,
+te
+,
+sr
+,
+bg
+,
+mn
+,
+ab
+,
+ady
+,
+kbd
+,
+av
+,
+dar
+,
+inh
+,
+ce
+,
+lki
+,
+lez
+,
+tab
+,
+kk
+,
+ky
+,
+tg
+,
+mk
+,
+tt
+,
+cv
+,
+ba
+,
+mhr
+,
+mo
+,
+udm
+,
+kv
+,
+os
+,
+bua
+,
+xal
+,
+tyv
+,
+sah
+,
+kaa
+,
+ar
+,
+fa
+,
+ug
+,
+ur
+,
+ps
+,
+ku
+,
+sd
+,
+bal
+,
+hi
+,
+mr
+,
+ne
+,
+bh
+,
+mai
+,
+ang
+,
+bho
+,
+mah
+,
+sck
+,
+new
+,
+gom
+,
+sa
+,
+bgc
+,
+ta
+PP-OCRv4
+ch
+,
+en
+PP-OCRv3
+abq
+,
+af
+,
+ady
+,
+ang
+,
+ar
+,
+ava
+,
+az
+,
+be
+,
+bg
+,
+bgc
+,
+bh
+,
+bho
+,
+bs
+,
+ch
+,
+che
+,
+chinese_cht
+,
+cs
+,
+cy
+,
+da
+,
+dar
+,
+de
+,
+german
+,
+en
+,
+es
+,
+et
+,
+fa
+,
+fr
+,
+french
+,
+ga
+,
+gom
+,
+hi
+,
+hr
+,
+hu
+,
+id
+,
+inh
+,
+is
+,
+it
+,
+japan
+,
+ka
+,
+kbd
+,
+korean
+,
+ku
+,
+la
+,
+lbe
+,
+lez
+,
+lt
+,
+lv
+,
+mah
+,
+mai
+,
+mi
+,
+mn
+,
+mr
+,
+ms
+,
+mt
+,
+ne
+,
+new
+,
+nl
+,
+no
+,
+oc
+,
+pi
+,
+pl
+,
+pt
+,
+ro
+,
+rs_cyrillic
+,
+rs_latin
+,
+ru
+,
+sa
+,
+sck
+,
+sk
+,
+sl
+,
+sq
+,
+sv
+,
+sw
+,
+ta
+,
+tab
+,
+te
+,
+tl
+,
+tr
+,
+ug
+,
+uk
+,
+ur
+,
+uz
+,
+vi
+5. 常见问题与解决方案
+¶
+5.1 性能优化问题
+¶
+Q: GPU推理速度慢怎么办？
+¶
+A
+: 可以通过以下方式优化：
+（1）启用高性能推理：设置
+enable_hpi=True
+，自动选择最优加速策略
+（2）启用TensorRT加速：设置
+use_tensorrt=True
+，需要CUDA 11.8+和TensorRT 8.6+
+（3）使用半精度：设置
+precision="fp16"
+，可以显著提升速度
+（4）调整批处理大小：根据显存大小设置合适的
+batch_size
+（5）使用移动端模型：在精度要求不高时使用
+PP-OCRv5_mobile
+系列模型
+Q: GPU内存不足（CUDA out of memory）怎么办？
+¶
+A
+: 可以通过以下方式解决：
+（1）减小批处理大小：将
+batch_size
+设置为1
+（2）减小图像尺寸：设置
+det_limit_side_len=640
+（3）启用内存优化：设置
+enable_memory_optim=True
+（4）限制GPU内存使用：设置
+gpu_mem=200
+（5）使用移动端模型：切换到
+PP-OCRv5_mobile
+系列模型
+5.2 模型选择问题
+¶
+Q: 如何选择合适的模型？
+¶
+A
+: 根据应用场景选择：
+- 服务器高精度场景：使用
+PP-OCRv5_server
+系列，精度最高
+- 移动端部署：使用
+PP-OCRv5_mobile
+系列，模型小速度快
+- 实时处理：使用
+PP-OCRv5_mobile
+系列，推理速度快
+- 批量处理：使用
+PP-OCRv5_server
+系列，精度高
+- 多语言识别：拉丁语系等可使用
+PP-OCRv6
+；阿拉伯文、西里尔文、天城文等语系请使用
+PP-OCRv5
+5.3 最佳实践
+¶
+Q: 生产环境部署建议？
+¶
+A
+:
+（1）使用高性能推理配置
+（2）启用TensorRT加速
+（3）合理设置批处理大小
+（4）监控GPU内存使用情况
+（5）做好错误处理和日志记录
+6. 总结
+¶
+通用OCR产线是PaddleOCR的核心功能，通过合理选择模型和配置参数，可以在不同场景下获得最佳的识别效果。建议根据部署环境选择合适的模型，根据应用需求调整参数，充分利用GPU加速和批处理优化。
+评论
+回到页面顶部
+上一页
+快速开始
+下一页
+PP-OCRv6简介
+Copyright © 2024 Maintained by PaddleOCR PMC.
+Made with
+Material for MkDocs

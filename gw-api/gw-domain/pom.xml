@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.guangxuan</groupId>
+    <artifactId>gw-audit</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>gw-domain</artifactId>
+  <name>gw-domain</name>
+  <description>领域模型、状态机、权限守卫（刻意不依赖 Spring，确保内部调用与接口调用走同一套规则）</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.guangxuan</groupId>
+      <artifactId>gw-common</artifactId>
+    </dependency>
+    <!-- 注意：本模块刻意不引入 spring-context / spring-security。
+         状态机与权限守卫写在领域层，使"接口调用"与"内部调用"（定时任务、回调、AI 编排）
+         无法绕过规则。若此处出现 Spring 依赖，说明有逻辑放错了层。 -->
+  </dependencies>
+</project>
