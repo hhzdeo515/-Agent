@@ -30,9 +30,31 @@ public interface MaterialMapper extends BaseMapper<MaterialEntity> {
             """)
     List<Map<String, Object>> selectInitialReviewClasses(@Param("caseId") Long caseId);
 
-    /** Case 级初审汇总（通过率口径固化在视图中） */
+    /**
+     * Case 级初审汇总（通过率口径固化在视图中）。
+     *
+     * <p>刻意逐列写别名而不是 {@code SELECT *}：Map 结果的键就是 JDBC 列标签，
+     * 用 {@code SELECT *} 会得到下划线键名，与上面的 {@code materialId} 风格不一致，
+     * 前端与报告要各写一套取值逻辑。别名写死之后键名只有一种。
+     */
     @Select("""
-            SELECT * FROM v_case_initial_review_summary WHERE case_id = #{caseId}
+            SELECT case_id                     AS caseId,
+                   case_no                     AS caseNo,
+                   case_name                   AS caseName,
+                   case_status                 AS caseStatus,
+                   reviewed_material_count     AS reviewedMaterialCount,
+                   parse_failed_count          AS parseFailedCount,
+                   total_material_count        AS totalMaterialCount,
+                   initial_pass_count          AS initialPassCount,
+                   pending_human_count         AS pendingHumanCount,
+                   risk_fail_count             AS riskFailCount,
+                   high_risk_items             AS highRiskItems,
+                   medium_risk_items           AS mediumRiskItems,
+                   low_risk_items              AS lowRiskItems,
+                   open_blocking_risk_items    AS openBlockingRiskItems,
+                   initial_pass_rate_by_material AS initialPassRateByMaterial
+              FROM v_case_initial_review_summary
+             WHERE case_id = #{caseId}
             """)
     Map<String, Object> selectInitialReviewSummary(@Param("caseId") Long caseId);
 }

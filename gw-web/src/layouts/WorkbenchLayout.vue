@@ -77,6 +77,9 @@ const hasAside = computed(() => meta.value.hasAside)
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  /* 高于右栏：模块头部的下拉（任务切换器）需要盖在右栏之上。
+     右栏内容再长也不该把一个正在展开的下拉菜单挡住。 */
+  z-index: 2;
   /* 中间主区域：大面积留白，背景由环境光层提供 */
   background: transparent;
 }

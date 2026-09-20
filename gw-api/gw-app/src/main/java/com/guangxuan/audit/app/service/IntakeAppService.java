@@ -311,6 +311,28 @@ public class IntakeAppService {
         return c;
     }
 
+    /**
+     * 最近创建的可选审核任务。
+     *
+     * <p>存在的意义是让「接收区创建的任务」能被反馈区、终审区接着处理——
+     * 否则前端只能硬编码一个 caseId 来演示，跨模块流转就是假的。
+     *
+     * <p>排除 {@code ARCHIVED}：归档任务仍是可查的历史，但不应继续出现在"当前任务"
+     * 选择器里，否则用户要在一堆已结束的任务里找正在处理的那个。
+     *
+     * <p>真实环境应改为按 {@code project_id} 与数据权限过滤（AGENTS.md 第 12 条：
+     * 不得在没有权限的情况下跨项目检索）；当前尚无项目成员表，故先按创建时间倒序。
+     */
+    @Transactional(readOnly = true)
+    public List<AuditCaseEntity> listRecent(int limit) {
+        int size = Math.min(Math.max(limit, 1), 100);
+        return caseMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<AuditCaseEntity>()
+                        .ne("status", CaseStatus.ARCHIVED.name())
+                        .orderByDesc("id")
+                        .last("LIMIT " + size));
+    }
+
     @Transactional(readOnly = true)
     public List<MaterialEntity> listMaterials(Long caseId) {
         return materialMapper.selectList(

@@ -42,6 +42,39 @@ public class FinalReviewController {
 
     private final RiskAppService riskAppService;
     private final ApprovalAppService approvalAppService;
+    private final com.guangxuan.audit.app.service.VersionDiffService versionDiffService;
+    private final com.guangxuan.audit.app.service.RiskRereviewService riskRereviewService;
+
+    // ── 版本差异（AGENTS.md 第 7 条）─────────────────────────────────────
+
+    /**
+     * 物料两个版本的差异。
+     *
+     * <p>不传参数时默认「上一版本 → 当前版本」，这是终审区最常用的比对。
+     * 差异会落库（{@code version_diff}），同一对版本重复请求复用已有记录——
+     * 事后复盘时才能确定"当时看到的是哪一份差异"。
+     */
+    @GetMapping("/materials/{materialId}/diff")
+    @PreAuthorize("@perm.has('version.diff_view')")
+    public Result<Map<String, Object>> diff(Actor actor,
+                                            @PathVariable Long materialId,
+                                            @RequestParam(required = false) Long fromVersionId,
+                                            @RequestParam(required = false) Long toVersionId) {
+        var view = versionDiffService.generate(actor, materialId, fromVersionId, toVersionId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        // diffId 是"这份差异就是当时那一份"的凭据：同一对版本重复请求会复用同一条记录
+        out.put("diffId", view.entity().getId());
+        out.put("materialId", view.entity().getMaterialId());
+        out.put("baseVersionId", view.entity().getBaseVersionId());
+        out.put("targetVersionId", view.entity().getTargetVersionId());
+        out.put("diffType", view.entity().getDiffType());
+        out.put("summary", view.entity().getSummary());
+        out.put("hasChange", view.entity().getHasChange());
+        out.put("engine", view.entity().getEngine());
+        out.put("createdAt", view.entity().getCreatedAt());
+        out.put("payload", view.payload());
+        return Result.ok(out);
+    }
 
     // ── 风险列表（已转入终审区的） ───────────────────────────────────────
 
@@ -76,24 +109,38 @@ public class FinalReviewController {
         return Result.ok(riskView(riskAppService.startRereview(actor, riskId, req.reviewScope())));
     }
 
-    public record RereviewResultRequest(boolean originalResolved,
-                                        boolean remainingRisk,
-                                        String summary) {
-    }
-
     /**
-     * 完成 AI 复审，回答三个必答问题：
-     * 原风险是否已解决、当前是否仍有剩余风险、本次修改是否产生新风险。
+     * 执行 AI 复审并落定结论。
      *
-     * <p>若发现新增风险，应<b>新建关联 Risk Case</b>（{@code parentRiskId} 指向本条），
-     * 而不是改写原风险的含义。
+     * <p>与旧实现的关键区别：<b>结论由服务端算出来</b>，而不是由前端把
+     * 「原风险是否已解决」当成参数传进来。后者等于让调用方直接指定 AI 的判断，
+     * 那么"AI 复审"就只是一个状态切换，没有任何实际核查。
+     *
+     * <p>服务端会依次回答三个问题（原风险是否已解决 / 是否仍有剩余风险 /
+     * 是否产生新风险），发现新增风险时<b>新建关联 Risk Case</b>，
+     * 然后把结论写入 review_record。
+     *
+     * <p>{@code reviewScope} 仍为必填且拒绝 FULL。
      */
     @PostMapping("/risks/{riskId}/rereview/result")
     @PreAuthorize("@perm.has('risk.rereview_trigger')")
     public Result<Map<String, Object>> completeRereview(Actor actor, @PathVariable Long riskId,
-                                                        @RequestBody RereviewResultRequest req) {
-        return Result.ok(riskView(riskAppService.completeRereview(actor, riskId,
-                req.originalResolved(), req.remainingRisk(), req.summary())));
+                                                        @RequestBody @Valid RereviewRequest req) {
+        var analysis = riskRereviewService.analyze(actor, riskId, req.reviewScope());
+
+        // 状态流转交给应用层按状态机执行；AI 只给结论，不自己推进流程
+        RiskCaseEntity updated = riskAppService.completeRereview(actor, riskId,
+                analysis.originalResolved(), analysis.remainingRisk(), analysis.summary());
+
+        Map<String, Object> out = new LinkedHashMap<>(riskView(updated));
+        out.put("originalResolved", analysis.originalResolved());
+        out.put("remainingRisk", analysis.remainingRisk());
+        out.put("pass", analysis.pass());
+        out.put("newRiskIds", analysis.newRiskIds());
+        out.put("newRisks", analysis.newRiskSummaries());
+        out.put("evidence", analysis.evidence());
+        out.put("summary", analysis.summary());
+        return Result.ok(out);
     }
 
     // ── 法务终审 ────────────────────────────────────────────────────────
@@ -103,14 +150,21 @@ public class FinalReviewController {
         public enum Decision {ACCEPT_REREVIEW, REJECT_REREVIEW}
     }
 
-    /** 法务终审 */
+    /**
+     * 法务终审。
+     *
+     * <p>认可时<b>不改变状态</b>（风险已在 LEGAL_FINAL_REVIEW，自跃迁会被状态机拒绝），
+     * 只落一条终审意见；不认可时退回整改。此前这里调用的是 {@code completeRereview}，
+     * 而它同样以 LEGAL_FINAL_REVIEW 为目标，因此必然抛 ILLEGAL_TRANSITION——
+     * 也就是说这条路径原本是走不通的。
+     */
     @PostMapping("/risks/{riskId}/legal-final-review")
     @PreAuthorize("@perm.has('risk.legal_final_review')")
     public Result<Map<String, Object>> legalFinalReview(Actor actor, @PathVariable Long riskId,
                                                         @RequestBody @Valid FinalReviewRequest req) {
         RiskCaseEntity r = req.decision() == FinalReviewRequest.Decision.ACCEPT_REREVIEW
-                ? riskAppService.completeRereview(actor, riskId, true, false, req.opinion())
-                : riskAppService.completeRereview(actor, riskId, false, true, req.opinion());
+                ? riskAppService.legalFinalReviewAccept(actor, riskId, req.opinion())
+                : riskAppService.legalFinalReviewReject(actor, riskId, req.opinion());
         return Result.ok(riskView(r));
     }
 
@@ -162,6 +216,30 @@ public class FinalReviewController {
                                                        @PathVariable Long materialId,
                                                        @RequestParam Long versionId) {
         return Result.ok(approvalAppService.approvalImpact(actor, materialId, versionId));
+    }
+
+    /**
+     * 某物料的批准记录。
+     *
+     * <p>存在的意义是让「撤销批准」可用：撤销需要 approvalId，
+     * 没有这个只读接口，前端只能靠写死 id 才能调通那条路径。
+     */
+    @GetMapping("/materials/{materialId}/approvals")
+    @PreAuthorize("@perm.has('material.approve')")
+    public Result<List<Map<String, Object>>> listApprovals(Actor actor, @PathVariable Long materialId) {
+        return Result.ok(approvalAppService.listApprovals(actor, materialId).stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", a.getId());
+                    m.put("versionId", a.getVersionId());
+                    m.put("fileSha256", a.getFileSha256());
+                    m.put("status", a.getStatus());
+                    m.put("approvedAt", a.getApprovedAt());
+                    m.put("revokedAt", a.getRevokedAt());
+                    m.put("revokeReason", a.getRevokeReason());
+                    return m;
+                })
+                .toList());
     }
 
     public record ApproveRequest(@NotNull Long versionId, String comment) {

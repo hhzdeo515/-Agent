@@ -246,6 +246,27 @@ public class IntakeController {
         return Result.ok(out);
     }
 
+    /**
+     * 最近创建的审核任务列表。
+     *
+     * <p>让「接收区创建的任务」能被反馈区、终审区接着处理。刻意只返回任务元信息，
+     * <b>不返回风险明细</b>——接收区不提前展示最终风险结论（AGENTS.md 第 4 条）。
+     */
+    @GetMapping("/cases")
+    @PreAuthorize("@perm.has('case.list')")
+    public Result<List<Map<String, Object>>> listCases(Actor actor,
+                                                       @RequestParam(defaultValue = "20") int limit) {
+        List<Map<String, Object>> rows = intakeAppService.listRecent(limit).stream()
+                .map(c -> {
+                    Map<String, Object> m = caseView(c);
+                    // 列表场景不需要完整审核要求，去掉以减小响应体
+                    m.remove("reviewRequirement");
+                    return m;
+                })
+                .toList();
+        return Result.ok(rows);
+    }
+
     @GetMapping("/materials/{materialId}/versions")
     @PreAuthorize("@perm.has('version.view')")
     public Result<List<MaterialVersionEntity>> listVersions(Actor actor,

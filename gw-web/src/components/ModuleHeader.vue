@@ -7,12 +7,19 @@
  * 状态条走的是「描边胶囊」编码，与风险等级的「实心色块」刻意区分（需求第 13 条）。
  */
 import type { ModuleMeta } from '@/config/modules'
+import CaseSwitcher from '@/components/CaseSwitcher.vue'
 
-defineProps<{
+const props = defineProps<{
   meta: ModuleMeta
   /** 状态条右侧的补充统计，如 "12 份物料 · 3 项待处理" */
   summary?: string
 }>()
+
+/**
+ * 任务切换器只在围绕 Case 流转的模块出现。
+ * AI 法务助手是零散咨询入口，没有"当前任务"这个概念，硬放一个切换器会误导用户。
+ */
+const showsCase = props.meta.key !== 'assistant'
 </script>
 
 <template>
@@ -26,6 +33,7 @@ defineProps<{
     </div>
 
     <div class="mh__status">
+      <CaseSwitcher v-if="showsCase" />
       <span v-for="hint in meta.statusHints" :key="hint" class="gw-status" :class="`gw-status--${meta.tone}`">
         <span class="gw-status__dot" />
         {{ hint }}

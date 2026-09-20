@@ -8,10 +8,18 @@
  *
  * 界面结构：左侧是「材料提交窗口」（唯一的核心操作），右侧是任务状态与后续动作。
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import FileDropzone from '@/components/FileDropzone.vue'
 import PanelCard from '@/components/PanelCard.vue'
-import { ApiError, apiGet, apiPost } from '@/api/client'
+import { ApiError, apiGet, apiPost, apiUpload } from '@/api/client'
+import {
+  loadRecentCases,
+  resolveActiveCase,
+  setActiveCase,
+  useActiveCase,
+  useCaseEpoch,
+} from '@/stores/activeCase'
+import { takePromoteDraft } from '@/stores/promoteDraft'
 
 interface CaseInfo {
   id: number
@@ -38,6 +46,9 @@ const preparing = ref(false)
 const busy = ref(false)
 const errorText = ref<string | null>(null)
 const submitted = ref(false)
+
+/** 任务切换后 caseInfo 还没重新拉回来时，用共享状态里的 id 兜底 */
+const { activeCaseId } = useActiveCase()
 
 /** 审核要求关注点；确认后才生效（AGENTS.md 第 4 条：模板不得默认为正式要求） */
 const requirements = ref([
@@ -66,10 +77,67 @@ const statusTone: Record<string, string> = {
 }
 
 onMounted(() => {
-  void ensureCase()
+  void boot()
 })
 
-/** 准备任务：进入即可上传，不需要用户先手动点"新建" */
+/** 用户在头部切换了任务：直接加载那个任务，不要再自动新建 */
+watch(useCaseEpoch(), async () => {
+  submitted.value = false
+  await resolveActiveCase()
+  await refresh()
+})
+
+/** 进入接收区时先认领一个任务。
+ *
+ * 优先复用当前任务（可能刚从反馈区跳回来，正在处理同一个 Case）；
+ * 只有在没有任何任务时才新建——否则用户每进一次接收区就会多出一个空任务，
+ * 后续模块还得让用户从一堆空任务里挑。
+ */
+async function boot() {
+  preparing.value = true
+  errorText.value = null
+  try {
+    // 助手带来的预填内容优先：此时应直接进入"新建任务"状态，
+    // 而不是先认领一个旧任务再让用户自己去点新建
+    const d = takePromoteDraft()
+    if (d) {
+      promoteSource.value = d.sourceText
+      newName.value = d.proposedCaseName
+      showNew.value = true
+      if (d.suggestedRequirements.length) {
+        applySuggestedRequirements(d.suggestedRequirements)
+      }
+      const existing = await resolveActiveCase()
+      if (existing) await refresh()
+      return
+    }
+    const existing = await resolveActiveCase()
+    if (existing) {
+      await refresh()
+      return
+    }
+    await ensureCase()
+  } catch (e) {
+    errorText.value = e instanceof ApiError
+      ? `任务准备失败：${e.message}`
+      : '任务准备失败，请确认后端服务已启动（http://localhost:8080）'
+  } finally {
+    preparing.value = false
+  }
+}
+
+/**
+ * 按助手建议的關注点调整勾选。
+ *
+ * 只把建议里出现的项勾上、其余取消——助手建议是"本批要重点看什么"，
+ * 若沿用默认全选，用户就分不清哪些是助手根据他的问题推出来的。
+ */
+function applySuggestedRequirements(suggested: string[]) {
+  const set = new Set(suggested)
+  requirements.value = requirements.value.map((r) => ({ ...r, on: set.has(r.label) }))
+}
+
+/** 新建任务：显式动作，不再隐式发生 */
 async function ensureCase() {
   if (caseInfo.value || preparing.value) return
   preparing.value = true
@@ -80,6 +148,9 @@ async function ensureCase() {
       name: '新一批宣传物料审核',
     })
     caseInfo.value = c
+    // 让反馈区、终审区能接着处理这个任务
+    setActiveCase(c.id)
+    await loadRecentCases().catch(() => undefined)
   } catch (e) {
     errorText.value = e instanceof ApiError
       ? `任务准备失败：${e.message}`
@@ -90,10 +161,11 @@ async function ensureCase() {
 }
 
 async function refresh() {
-  if (!caseId.value) return
+  const id = caseId.value ?? activeCaseId.value
+  if (!id) return
   try {
     const d = await apiGet<{ case: CaseInfo; materials: MaterialItem[] }>(
-      `/api/intake/cases/${caseId.value}`,
+      `/api/intake/cases/${id}`,
     )
     caseInfo.value = d.case
     materials.value = d.materials ?? []
@@ -145,6 +217,54 @@ async function startReview() {
 
 const canStartReview = computed(() =>
   !!caseInfo.value?.requirementConfirmed && uploadedCount.value > 0 && !busy.value)
+
+/** 新建任务：显式动作。默认名可直接用，也可改成"9 月社交媒体宣传内容审核"这类可识别名称 */
+const showNew = ref(false)
+const newName = ref('')
+
+/** 来自「AI 法务助手 → 转为正式审核任务」的预填内容（AGENTS.md 第 3 条） */
+const promoteSource = ref<string | null>(null)
+const attachSource = ref(true)
+
+async function createNew() {
+  const name = newName.value.trim() || '新一批宣传物料审核'
+  busy.value = true
+  errorText.value = null
+  try {
+    const c = await apiPost<CaseInfo>('/api/intake/cases', { projectId: 1, name })
+    caseInfo.value = c
+    materials.value = []
+    submitted.value = false
+    setActiveCase(c.id)
+    showNew.value = false
+    newName.value = ''
+
+    // 把助手带过来的文案作为一份真实文本材料提交。
+    // 走浏览器构造 File + multipart：后端不需要为"一段字符串"单开接口，
+    // 而且它确实会像普通上传一样落到对象存储、被解析、被定位。
+    const text = promoteSource.value
+    if (text && attachSource.value) {
+      try {
+        const form = new FormData()
+        form.append('caseId', String(c.id))
+        form.append('file', new File([text], '助手咨询文案.txt', { type: 'text/plain' }))
+        form.append('uploadReason', '来自 AI 法务助手的咨询内容')
+        const up = await apiUpload<{ materialId: number }>('/api/intake/materials/upload', form)
+        await apiPost(`/api/intake/materials/${up.materialId}/parse`)
+      } catch (e) {
+        errorText.value = e instanceof ApiError
+          ? `任务已创建，但带入助手文案失败：${e.message}`
+          : '任务已创建，但带入助手文案失败，请手动上传'
+      }
+    }
+    promoteSource.value = null
+    await refresh()
+  } catch (e) {
+    errorText.value = e instanceof ApiError ? `新建任务失败：${e.message}` : '新建任务失败'
+  } finally {
+    busy.value = false
+  }
+}
 </script>
 
 <template>
@@ -217,6 +337,42 @@ const canStartReview = computed(() =>
             </dd>
           </div>
         </dl>
+
+        <div v-if="showNew" class="new">
+          <div v-if="promoteSource" class="new__from">
+            <span class="new__from-title">来自 AI 法务助手的咨询</span>
+            <p class="new__from-text">{{ promoteSource }}</p>
+            <label class="new__from-check">
+              <input v-model="attachSource" type="checkbox" />
+              <span>把这段文案作为一份文本材料一并提交</span>
+            </label>
+          </div>
+
+          <input
+            v-model="newName"
+            class="new__input"
+            type="text"
+            placeholder="例如：9 月社交媒体宣传内容审核"
+            @keyup.enter="createNew"
+          />
+          <div class="gw-btn-row">
+            <button class="gw-btn gw-btn--ghost" type="button" @click="showNew = false; promoteSource = null">
+              取消
+            </button>
+            <button class="gw-btn gw-btn--primary" type="button" :disabled="busy" @click="createNew">
+              创建
+            </button>
+          </div>
+        </div>
+        <div v-else class="gw-btn-row">
+          <button
+            class="gw-btn gw-btn--ghost gw-btn--block"
+            type="button"
+            @click="showNew = true"
+          >
+            新建审核任务
+          </button>
+        </div>
       </PanelCard>
 
       <!-- 审核要求：确认后才生效 -->
@@ -431,5 +587,63 @@ const canStartReview = computed(() =>
   font-size: var(--gw-fs-xs);
   color: var(--gw-text-tertiary);
   text-align: center;
+}
+
+/* ── 新建任务 ─────────────────────────────────────────────────────── */
+.new__from {
+  margin-bottom: var(--gw-s4);
+  padding: var(--gw-s3) var(--gw-s4);
+  border-left: 3px solid var(--gw-accent);
+  border-radius: var(--gw-r-sm);
+  background: var(--gw-accent-faint);
+}
+
+.new__from-title {
+  display: block;
+  font-size: var(--gw-fs-xs);
+  color: var(--gw-text-tertiary);
+}
+
+.new__from-text {
+  margin-top: 4px;
+  font-size: var(--gw-fs-sm);
+  color: var(--gw-text);
+  line-height: 1.5;
+  /* 助手输入可能很长：限高滚动，避免把"创建"按钮挤出视野 */
+  max-height: 84px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.new__from-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--gw-s3);
+  font-size: var(--gw-fs-xs);
+  color: var(--gw-text-secondary);
+  cursor: pointer;
+}
+
+.new__input {
+  width: 100%;
+  margin-bottom: var(--gw-s3);
+  padding: 7px 10px;
+  border: 1px solid var(--gw-line-strong);
+  border-radius: var(--gw-r-sm);
+  background: var(--gw-surface);
+  font-size: var(--gw-fs-base);
+  font-family: inherit;
+  color: var(--gw-text);
+}
+
+.new__input:focus {
+  outline: none;
+  border-color: var(--gw-accent);
+}
+
+.new .gw-btn-row {
+  justify-content: flex-end;
 }
 </style>

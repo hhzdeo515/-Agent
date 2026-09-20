@@ -111,6 +111,13 @@ public class ParseAppService {
                     materialId, type, anchors.size(), status);
             return anchors.size();
 
+        } catch (DomainException e) {
+            // 明确的能力缺失（例如 Mock 模式不支持 OCR）：原样把原因透给用户，
+            // 不要包装成"解析过程出错"——用户需要知道的是"该配什么"，不是"出错了"
+            log.warn("物料 {} 解析被拒：{}", materialId, e.getMessage());
+            intakeAppService.updateParseStatus(actor, materialId, ParseStatus.FAILED,
+                    e.errorCode().name(), e.getMessage());
+            return 0;
         } catch (Exception e) {
             log.error("物料 {} 解析异常", materialId, e);
             intakeAppService.updateParseStatus(actor, materialId, ParseStatus.FAILED,

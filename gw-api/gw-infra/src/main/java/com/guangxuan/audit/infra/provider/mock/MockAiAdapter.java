@@ -5,6 +5,7 @@ import com.guangxuan.audit.common.enums.RiskType;
 import com.guangxuan.audit.domain.ai.RiskDraft;
 import com.guangxuan.audit.domain.port.AiInferencePort;
 import com.guangxuan.audit.infra.persistence.mapper.LegalBasisMapper;
+import com.guangxuan.audit.infra.provider.RiskKeywordRules;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -45,37 +46,17 @@ public class MockAiAdapter implements AiInferencePort {
      * <p>覆盖 AGENTS.md 第 6 条列举的主要风险类型，便于演示"一张海报多个独立风险"
      * 会生成多条可分别处理的 Risk Case。
      */
-    private static final Map<String, Rule> RULES = new LinkedHashMap<>();
-
-    private record Rule(RiskType type, RiskLevel level, String reason) {
-    }
+    /**
+     * 关键词规则表已提取到 {@link com.guangxuan.audit.infra.provider.RiskKeywordRules}。
+     *
+     * <p>原因：AI 复审（{@code RiskRereviewService}）必须与初审用同一套关键词，
+     * 否则会出现"初审命中、复审不命中"的分裂，在界面上表现为 AI 前后不一致。
+     * 本类不再自己维护规则，一律引用共享表。
+     */
+    private static final Map<String, RiskKeywordRules.Rule> RULES = RiskKeywordRules.all();
 
     static {
-        RULES.put("行业第一", new Rule(RiskType.ABSOLUTE_CLAIM, RiskLevel.HIGH,
-                "涉嫌使用绝对化用语，违反广告法对绝对化宣传的限制"));
-        RULES.put("第一", new Rule(RiskType.ABSOLUTE_CLAIM, RiskLevel.HIGH,
-                "涉嫌使用绝对化用语"));
-        RULES.put("最优", new Rule(RiskType.COMPETITOR_COMPARISON, RiskLevel.MEDIUM,
-                "比较性表述缺乏依据与统计口径，存在贬低竞品或不正当竞争风险"));
-        RULES.put("最好", new Rule(RiskType.ABSOLUTE_CLAIM, RiskLevel.HIGH,
-                "涉嫌使用绝对化用语"));
-        RULES.put("领先", new Rule(RiskType.COMPETITOR_COMPARISON, RiskLevel.MEDIUM,
-                "竞品比较表述缺乏依据与统计口径"));
-        RULES.put("100%", new Rule(RiskType.SAFETY_PROMISE, RiskLevel.HIGH,
-                "作出绝对化承诺，通常无法验证，易被认定为虚假或引人误解"));
-        RULES.put("保障安全", new Rule(RiskType.SAFETY_PROMISE, RiskLevel.HIGH,
-                "作出安全承诺，需提供权威检测或认证依据"));
-        RULES.put("零风险", new Rule(RiskType.SAFETY_PROMISE, RiskLevel.HIGH,
-                "绝对化安全承诺，通常无法验证"));
-        // 续航类：中文单位与英文单位都要覆盖，否则「1000 公里」会被漏检
-        RULES.put("续航", new Rule(RiskType.EVIDENCE_MISSING, RiskLevel.MEDIUM,
-                "续航数据未标注测试工况与数据来源，缺乏证明材料"));
-        RULES.put("1000km", new Rule(RiskType.EVIDENCE_MISSING, RiskLevel.MEDIUM,
-                "续航数据未标注数据来源与测试工况，缺乏证明材料"));
-        RULES.put("最低价", new Rule(RiskType.PRICE_CLAIM, RiskLevel.MEDIUM,
-                "价格宣传需标明适用范围、期限与依据"));
-        RULES.put("立减", new Rule(RiskType.PRICE_CLAIM, RiskLevel.MEDIUM,
-                "价格优惠表述需标明适用范围与期限"));
+        // 规则内容定义见 RiskKeywordRules；此处仅保留一个空块以便阅读时定位
     }
 
     @Override
@@ -86,20 +67,21 @@ public class MockAiAdapter implements AiInferencePort {
             if (text == null || text.isBlank()) {
                 continue;
             }
-            for (Map.Entry<String, Rule> e : RULES.entrySet()) {
-                if (!text.contains(e.getKey())) {
-                    continue;
-                }
-                Rule rule = e.getValue();
+            // 用共享规则表匹配：它内部会剔除「被更长命中词包含」的短词，
+            // 否则「行业第一」会同时生成「行业第一」与「第一」两条重复风险
+            for (RiskKeywordRules.Rule rule : RiskKeywordRules.match(text)) {
                 drafts.add(new RiskDraft(
                         rule.type().name(),
                         rule.level().name(),
-                        e.getKey(),
+                        rule.keyword(),
                         new RiskDraft.Location(List.of(line.anchorId()), "NOT_APPLICABLE",
                                 "锚点 " + line.anchorId()),
                         rule.reason(),
                         0.85,
-                        List.of(),
+                        // 依据只能来自知识库：这里是防虚构法条机制的输入端。
+                        // 曾经被误改成 List.of() 过一次——那样每条风险都会变成"依据不足"，
+                        // 表面上更"安全"，实际上是让整套引用体系空转，法务看不到任何法条。
+                        legalRefsFor(rule.type().name()),
                         List.of(),
                         List.of(),
                         "建议删除或改为有依据的表述",
@@ -196,31 +178,18 @@ public class MockAiAdapter implements AiInferencePort {
         List<RiskDraft> risks = new ArrayList<>();
         List<String> hitKeywords = new ArrayList<>();
 
-        // 先收集全部命中词，再剔除「被更长命中词包含」的短词。
-        // 否则「行业第一」会同时命中「行业第一」与「第一」两条规则，
-        // 生成两条内容重复的 Risk Case——这会直接污染风险数量与通过率。
-        List<String> matched = new ArrayList<>();
-        for (String kw : RULES.keySet()) {
-            if (question.contains(kw)) {
-                matched.add(kw);
-            }
-        }
-        for (String kw : matched) {
-            boolean coveredByLonger = matched.stream()
-                    .anyMatch(other -> !other.equals(kw) && other.length() > kw.length() && other.contains(kw));
-            if (coveredByLonger) {
-                continue;
-            }
-            Rule rule = RULES.get(kw);
-            hitKeywords.add(kw);
+        // 用共享规则表匹配，其内部已处理「被更长命中词包含则剔除」的去重：
+        // 否则「行业第一」会同时命中「行业第一」与「第一」，生成两条重复风险
+        for (RiskKeywordRules.Rule rule : RiskKeywordRules.match(question)) {
+            hitKeywords.add(rule.keyword());
             risks.add(new RiskDraft(
-                    rule.type().name(), rule.level().name(), kw,
+                    rule.type().name(), rule.level().name(), rule.keyword(),
                     new RiskDraft.Location(List.of(), "NOT_APPLICABLE", "用户输入文本"),
                     rule.reason(), 0.85,
                     legalRefsFor(rule.type().name()),
                     List.of(), List.of(),
                     "建议删除或改为有依据的客观表述",
-                    recommendFor(kw),
+                    recommendFor(rule.keyword()),
                     "如保留原表述，需提供第三方检测报告或统计数据来源",
                     "OPEN"));
         }
@@ -314,75 +283,19 @@ public class MockAiAdapter implements AiInferencePort {
     }
 
     /**
-     * 规则 → 条款的关键词线索。
-     *
-     * <p>为什么需要它：{@code risk_rule_kb_ref} 关联的粒度是「法规」，
-     * 但法务要看的是具体条款。绝对化用语对应广告法第九条（"国家级""最高级""最佳"），
-     * 引证数据对应第十一条，竞品贬低对应第十三条——不区分就会一律引到第四条，
-     * 依据虽然真实但不准确。
+     * 规则 → 条款的关键词线索已提取到
+     * {@link com.guangxuan.audit.infra.provider.RiskKeywordRules#clauseHint(String)}。
      */
-    private static final Map<String, String> CLAUSE_HINT = Map.of(
-            "ABSOLUTE_CLAIM", "国家级",
-            "EVIDENCE_MISSING", "引证内容",
-            "COMPETITOR_COMPARISON", "贬低",
-            "MISLEADING", "虚假广告",
-            "PRICE_CLAIM", "价格",
-            "SAFETY_PROMISE", "引人误解",
-            "DISCLAIMER_MISSING", "显著、清晰表示");
 
-    /** 从该规则关联的条款切片中，按关键词线索选出最相关的一条 */
+    /**
+     * 从该规则关联的条款切片中选出最相关的一条。
+     *
+     * <p>实现已提取到 {@link com.guangxuan.audit.infra.legal.LegalClausePicker}，
+     * 因为"选哪一条条款"有三处调用方（初审引用、反馈区依据还原、报告生成），
+     * 各写一份迟早出现"详情说第九条、报告写第四条"。
+     */
     private String pickRelevantClause(String riskType, List<LegalBasisMapper.LegalBasisRow> rows) {
-        String hint = CLAUSE_HINT.get(riskType);
-
-        LegalBasisMapper.LegalBasisRow best = null;
-        if (hint != null) {
-            for (LegalBasisMapper.LegalBasisRow r : rows) {
-                if (r.getChunkText() != null && r.getChunkText().contains(hint)) {
-                    best = r;
-                    break;
-                }
-            }
-        }
-        if (best == null) {
-            // 兜底：取第一条有文本的条款
-            for (LegalBasisMapper.LegalBasisRow r : rows) {
-                if (r.getChunkText() != null && !r.getChunkText().isBlank()) {
-                    best = r;
-                    break;
-                }
-            }
-        }
-        if (best == null) {
-            return "（该法规已关联，但未找到可展示的条款文本）";
-        }
-
-        String t = best.getChunkText();
-        // 条款号：开头到第一个全角空格，例如「第十一条」
-        int sp = t.indexOf('　');
-        String clauseNo = sp > 0 ? t.substring(0, sp) : "";
-
-        // 命中线索时，只截取包含线索的那一句话——条款常常包含多款，
-        // 截到第一个句号会拿到与本次风险无关的条款（例如第十一条前半句讲行政许可、
-        // 后半句才是"引证内容应当真实、准确，并表明出处"）。
-        if (hint != null) {
-            int hIdx = t.indexOf(hint);
-            if (hIdx >= 0) {
-                int start = Math.max(0, t.lastIndexOf('。', hIdx) + 1);
-                int end = t.indexOf('。', hIdx);
-                String sentence = end > 0 ? t.substring(start, end + 1) : t.substring(start);
-                if (sentence.length() > 150) {
-                    sentence = sentence.substring(0, 150) + "…";
-                }
-                // 条款本身可能就带「第X条」前缀，避免拼成「第九条　第九条　…」
-                if (clauseNo.isEmpty() || sentence.startsWith(clauseNo)) {
-                    return sentence;
-                }
-                return clauseNo + "　" + sentence;
-            }
-        }
-
-        int dot = t.indexOf('。');
-        return dot > 0 && dot < 130 ? t.substring(0, dot + 1) : t.substring(0, Math.min(110, t.length()));
+        return com.guangxuan.audit.infra.legal.LegalClausePicker.pick(riskType, rows);
     }
 
     private String levelLabel(String level) {

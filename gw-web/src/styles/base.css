@@ -56,6 +56,55 @@ button {
   cursor: pointer;
 }
 
+/* ── 浏览器自带表面：这些是"没有画过但仍然会被看到"的部分 ──────────────
+   它们默认属于浏览器而不是这套设计，是页面"被拼装"还是"被建造"最便宜的信号。
+   注意用的是全局选择器：工作台里每一处都可能被选中、被 Tab 到、被滚动。 */
+
+::selection {
+  background: var(--gw-accent-soft);
+  color: var(--gw-accent-strong);
+}
+
+/* 只在键盘导航时显示焦点环：鼠标点击不显示，避免满屏描边 */
+:focus-visible {
+  outline: 2px solid var(--gw-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* 滚动条：与墨青主色同源，细，不用系统默认的宽灰条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gw-line-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: var(--gw-r-pill);
+  background-clip: content-box;
+  background-color: var(--gw-line-strong);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--gw-text-tertiary);
+}
+
+/* 插入光标也属于调色板 */
+input,
+textarea,
+[contenteditable] {
+  caret-color: var(--gw-accent);
+}
+
 a {
   color: var(--gw-accent-text, var(--gw-ink-700));
   text-decoration: none;

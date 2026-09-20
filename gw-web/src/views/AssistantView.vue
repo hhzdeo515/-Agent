@@ -11,6 +11,7 @@
  */
 import { ref } from 'vue'
 import { ApiError, apiPost, apiUpload } from '@/api/client'
+import { setPromoteDraft } from '@/stores/promoteDraft'
 import ConversationThread, { type Message } from '@/components/ConversationThread.vue'
 import type { TraceStep } from '@/components/ReasoningTrace.vue'
 import Composer from '@/components/Composer.vue'
@@ -136,9 +137,20 @@ async function onPromote() {
   const lastUser = [...messages.value].reverse().find((m) => m.role === 'user')
   if (!lastUser) return
   try {
-    await apiPost('/api/assistant/promote', {
+    // 助手只产出预填草稿，不建任务：正式任务的创建必须在接收区由人确认
+    // （AGENTS.md 第 3 条）。草稿交给接收区，跳过去后由用户改完再创建。
+    const d = await apiPost<{
+      proposedCaseName: string
+      sourceText: string
+      suggestedRequirements: string[]
+    }>('/api/assistant/promote', {
       sessionId: sessionId.value,
       message: lastUser.text,
+    })
+    setPromoteDraft({
+      proposedCaseName: d?.proposedCaseName ?? '',
+      sourceText: d?.sourceText ?? lastUser.text,
+      suggestedRequirements: d?.suggestedRequirements ?? [],
     })
     window.location.hash = '#/intake'
   } catch (err) {

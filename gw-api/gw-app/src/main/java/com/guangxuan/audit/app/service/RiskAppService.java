@@ -24,6 +24,7 @@ import com.guangxuan.audit.infra.persistence.entity.ReviewRecordEntity;
 import com.guangxuan.audit.infra.persistence.entity.RiskCaseEntity;
 import com.guangxuan.audit.infra.persistence.mapper.AuditCaseMapper;
 import com.guangxuan.audit.infra.persistence.mapper.EvidenceAnchorMapper;
+import com.guangxuan.audit.infra.persistence.mapper.LegalBasisMapper;
 import com.guangxuan.audit.infra.persistence.mapper.MaterialMapper;
 import com.guangxuan.audit.infra.persistence.mapper.MaterialVersionMapper;
 import com.guangxuan.audit.infra.persistence.mapper.ReviewRecordMapper;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,6 +76,9 @@ public class RiskAppService {
     private final AuditCaseMapper caseMapper;
     private final AiInferencePort aiInferencePort;
     private final ObjectMapper objectMapper;
+    private final LegalBasisMapper legalBasisMapper;
+    private final com.guangxuan.audit.infra.persistence.mapper.RiskCommunicationScriptMapper
+            scriptMapper;
 
     @Value("${gw.ai.pipeline-version:0.1.0}")
     private String pipelineVersion;
@@ -160,9 +165,18 @@ public class RiskAppService {
                 new AiInferencePort.CandidateRequest(
                         material.getMaterialType(), content, lines, null));
 
-        // 阶段 3：规则与证据检索（此处 Mock 适配器返回空；真实实现走
-        // text-embedding-v4 的 dense+sparse 混合检索 + qwen3-rerank 重排）
-        List<AiInferencePort.RetrievedRule> retrievedRules = List.of();
+        // 阶段 3：规则与证据检索。
+        //
+        // 这里必须真的去查知识库，不能返回空——原因是一个容易被忽略的连锁反应：
+        // 阶段 5 的校验器会把"引用了本次检索结果之外的依据"判定为幻觉并丢弃，
+        // 于是检索恒为空 ⇒ 所有法条引用都被丢掉 ⇒ rule_refs 全部为 [] ⇒
+        // 每条风险都变成"依据不足、待人工判断"。表面上更保守，实际上是让整套
+        // 引用体系空转，法务在界面上看不到任何法条（这个问题真实发生过）。
+        //
+        // 检索口径：按候选风险类型取出 ACTIVE 规则，以及规则绑定的、已发布的
+        // 知识库版本 ID。这正是"风险类型 → 风险规则 → 关联法条"这条链路的查询，
+        // 与 MockAiAdapter 生成引用时用的是同一个来源，因此引用的存在性可被独立验证。
+        List<AiInferencePort.RetrievedRule> retrievedRules = retrieveRules(candidates);
 
         // 阶段 4：风险判断
         List<RiskDraft> judged = aiInferencePort.judge(
@@ -192,6 +206,54 @@ public class RiskAppService {
                 "{\"candidates\":" + candidates.size() + ",\"created\":" + created
                         + ",\"violations\":" + validation.totalViolations() + "}");
         return created;
+    }
+
+    /**
+     * 阶段 3：按候选风险类型检索规则与法条。
+     *
+     * <p>只取 {@code ACTIVE} 规则与 {@code PUBLISHED} 知识库（口径与
+     * {@code LegalBasisMapper.findByRiskType} 一致），因此检索结果本身就是
+     * "当前现行有效"的依据集合。历史上、企业内部的规则刻意不混进来——
+     * 界面必须能区分现行规则与历史规则（AGENTS.md 第 10 条）。
+     *
+     * <p>真实实现应升级为向量检索（{@code text-embedding-v4} dense+sparse +
+     * {@code qwen3-rerank} 重排）。但在那之前，这个确定性查询比返回空集更正确：
+     * 空集不是"更安全"，而是把校验器变成了对所有引用的否决权。
+     */
+    private List<AiInferencePort.RetrievedRule> retrieveRules(List<RiskDraft> candidates) {
+        Set<String> types = new LinkedHashSet<>();
+        for (RiskDraft d : candidates) {
+            if (d.riskType() != null && !d.riskType().isBlank()) {
+                types.add(d.riskType());
+            }
+        }
+        if (types.isEmpty()) {
+            return List.of();
+        }
+
+        List<AiInferencePort.RetrievedRule> out = new ArrayList<>();
+        Set<Long> seen = new HashSet<>();
+        for (String type : types) {
+            try {
+                for (LegalBasisMapper.LegalBasisRow row : legalBasisMapper.findByRiskType(type)) {
+                    if (row.getKbVersionId() == null || !seen.add(row.getKbVersionId())) {
+                        continue;
+                    }
+                    out.add(new AiInferencePort.RetrievedRule(
+                            row.getKbVersionId(),
+                            row.getRuleCode(),
+                            row.getRuleName(),
+                            row.getChunkText(),
+                            "CURRENT",
+                            row.getLawTitle()));
+                }
+            } catch (Exception e) {
+                // 检索失败不能让初审整体失败；如实记日志，校验器会据此把相关风险转人工
+                log.warn("规则检索失败: riskType={} err={}", type, e.getMessage());
+            }
+        }
+        log.info("规则检索完成：候选类型 {} 个，检索到依据 {} 条", types.size(), out.size());
+        return out;
     }
 
     /**
@@ -358,6 +420,47 @@ public class RiskAppService {
     }
 
     /**
+     * 法务终审：认可 AI 复审结论。
+     *
+     * <p><b>这一步刻意不改变状态。</b>风险在 AI 复审通过时已经进入
+     * {@code LEGAL_FINAL_REVIEW}，而状态机的 {@code transit} 明确拒绝
+     * {@code from == target}（"风险已处于目标状态"）。因此任何"在法务终审时再跃迁到
+     * LEGAL_FINAL_REVIEW"的写法都必然抛 {@code ILLEGAL_TRANSITION}，
+     * 那条路径是走不通的。
+     *
+     * <p>法务"认可"在这里的语义是：留下终审意见并解锁后续的签名与关闭。
+     * 真正的终点是 {@code signAndClose}。
+     */
+    @Transactional
+    public RiskCaseEntity legalFinalReviewAccept(Actor actor, Long riskId, String opinion) {
+        actor.requirePermission(PermCode.RISK_LEGAL_FINAL_REVIEW);
+        RiskCaseEntity e = loadEntity(riskId);
+        if (!RiskStatus.LEGAL_FINAL_REVIEW.name().equals(e.getStatus())) {
+            throw new DomainException(ErrorCode.ILLEGAL_TRANSITION,
+                    "风险当前不在法务终审状态，无法执行终审认可");
+        }
+        // from/to 相同是合法的：这是一条"无状态变更的意见记录"，
+        // 审计需要它，但它不该伪造一次不存在的状态跃迁
+        reviewRecordService.append(e.getCaseId(), riskId, e.getCurrentVersionId(), actor,
+                "LEGAL_FINAL_REVIEW", opinion,
+                RiskStatus.LEGAL_FINAL_REVIEW, RiskStatus.LEGAL_FINAL_REVIEW,
+                "{\"decision\":\"ACCEPT_REREVIEW\"}");
+        log.info("法务终审认可：风险 {} 保持 {} 状态，等待签名关闭",
+                e.getRiskNo(), e.getStatus());
+        return loadEntity(riskId);
+    }
+
+    /** 法务终审：不认可 AI 复审结论，退回整改（这是一次真实的状态跃迁） */
+    @Transactional
+    public RiskCaseEntity legalFinalReviewReject(Actor actor, Long riskId, String opinion) {
+        RiskCase risk = loadDomain(riskId);
+        RiskStateMachine.TransitionResult r =
+                RiskStateMachine.legalFinalReviewReject(risk, actor, opinion);
+        applyAndRecord(risk, r, actor);
+        return loadEntity(riskId);
+    }
+
+    /**
      * 法务签名并关闭风险。
      *
      * <p>这是全系统权限最严的动作，三重保证：
@@ -386,9 +489,22 @@ public class RiskAppService {
         return riskCaseMapper.listByCase(caseId);
     }
 
+    /**
+     * 某个风险下已生成的沟通话术。
+     *
+     * <p>属于反馈区可读数据：话术是给业务方沟通用的，由 AI 生成、随报告一并产出。
+     * 这里只读不写——生成入口在 {@link InitialReviewReportService}，
+     * 避免出现"两处都能造话术"的重复职责。
+     */
     @Transactional(readOnly = true)
-    public RiskCaseEntity loadEntity(Long riskId) {
-        RiskCaseEntity e = riskCaseMapper.selectById(riskId);
+    public List<com.guangxuan.audit.infra.persistence.entity.RiskCommunicationScriptEntity>
+            listScripts(Long riskId) {
+        loadEntity(riskId);
+        return scriptMapper.listByRisk(riskId);
+    }
+
+    @Transactional(readOnly = true)
+    public RiskCaseEntity loadEntity(Long riskId) {        RiskCaseEntity e = riskCaseMapper.selectById(riskId);
         if (e == null) {
             throw new DomainException(ErrorCode.RESOURCE_NOT_VISIBLE);
         }

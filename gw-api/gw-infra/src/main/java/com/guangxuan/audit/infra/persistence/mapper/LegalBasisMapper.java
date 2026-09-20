@@ -62,6 +62,28 @@ public interface LegalBasisMapper {
             """)
     List<LegalBasisRow> listAllPublished();
 
+    /**
+     * 按知识库版本 ID 批量取条款原文。
+     *
+     * <p>用途：把 {@code risk_case.rule_refs} 里存的一串 ID 还原成人能读的"审核依据"。
+     * 批量取而不是逐条取——风险列表一屏几十条，逐条查会变成 N+1。
+     *
+     * <p>刻意<b>不带</b> {@code governance_status} 过滤条件：风险记录当时引用的就是那一版，
+     * 事后即使该版本被下架，也必须能还原出当时引用的原文（AGENTS.md 第 12 条 Audit Trail）。
+     */
+    @Select("""
+            <script>
+            SELECT i.title AS lawTitle, v.id AS kbVersionId, c.chunk_no AS chunkNo, c.text AS chunkText
+              FROM kb_chunk c
+              JOIN kb_item_version v ON v.id = c.kb_item_version_id
+              JOIN kb_item i         ON i.id = v.kb_item_id
+             WHERE v.id IN
+             <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+             ORDER BY v.id, c.chunk_no
+            </script>
+            """)
+    List<LegalBasisRow> findByIds(@Param("ids") java.util.Collection<Long> ids);
+
     /** 一行 = 一条规则 × 一个条款切片（无可选字段，与 strict schema 的约束风格一致） */
     class LegalBasisRow {
         private String ruleCode;

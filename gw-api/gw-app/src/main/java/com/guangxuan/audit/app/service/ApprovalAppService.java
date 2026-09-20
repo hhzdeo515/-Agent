@@ -121,6 +121,22 @@ public class ApprovalAppService {
     }
 
     /**
+     * 列出某物料的全部批准记录。
+     *
+     * <p>撤销批准需要一个 {@code approvalId}，而在此之前没有任何接口能把 id 交出来，
+     * 于是"撤销"这个动作在前端无法被真正执行——只能靠写死 id。
+     * 因此补这个只读接口，让撤销路径可用。
+     */
+    @Transactional(readOnly = true)
+    public java.util.List<MaterialApprovalEntity> listApprovals(Actor actor, Long materialId) {
+        actor.requirePermission(PermCode.MATERIAL_APPROVE);
+        return approvalMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<MaterialApprovalEntity>()
+                        .eq("material_id", materialId)
+                        .orderByDesc("id"));
+    }
+
+    /**
      * 标记最终批准版本。
      *
      * <p>AGENTS.md 第 7 条：<b>只有一份物料关联的所有阻断性风险都关闭后</b>，
