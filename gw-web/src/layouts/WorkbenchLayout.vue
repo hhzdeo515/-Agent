@@ -21,11 +21,13 @@ import ModuleHeader from '@/components/ModuleHeader.vue'
 const props = defineProps<{ moduleKey: ModuleKey }>()
 
 const meta = computed(() => MODULE_MAP[props.moduleKey])
+/** 助手为纯对话场景，不显示右侧分栏 */
+const hasAside = computed(() => meta.value.hasAside)
 </script>
 
 <template>
   <!-- data-module 驱动整套点缀色：墨青 / 铜金 / 暗酒红 -->
-  <div class="wb" :data-module="moduleKey">
+  <div class="wb" :data-module="moduleKey" :class="{ 'wb--no-aside': !hasAside }">
     <SideNav :active="moduleKey" />
 
     <main class="wb__main">
@@ -39,8 +41,8 @@ const meta = computed(() => MODULE_MAP[props.moduleKey])
       </div>
     </main>
 
-    <!-- 右侧分栏：内容由当前模块 Teleport 注入 -->
-    <aside id="wb-aside" class="wb__aside" />
+    <!-- 右侧分栏：内容由当前模块 Teleport 注入；助手模块不渲染此栏 -->
+    <aside v-if="hasAside" id="wb-aside" class="wb__aside" />
   </div>
 </template>
 
@@ -98,15 +100,34 @@ const meta = computed(() => MODULE_MAP[props.moduleKey])
   box-shadow: -1px 0 0 rgba(27, 46, 51, 0.015), -8px 0 24px rgba(27, 46, 51, 0.02);
 }
 
+/* 无侧栏（助手）：中间区占满，并让对话内容居中，
+   避免长文本全部挤在左侧、右边留出一条空白 */
+.wb--no-aside {
+  grid-template-columns: var(--gw-nav-w) minmax(0, 1fr);
+}
+
+/* 无侧栏时让内容居中。
+   用对称 padding 而不是给子元素 margin:auto —— 后者在 scoped CSS 下会因为
+   `> *` 匹配不到子组件渲染的元素而静默失效（这些元素带的是各自组件的 data-v）。
+   calc 保证两侧至少 56px，空间富余时自动居中。 */
+.wb--no-aside .wb__center {
+  padding-left: max(var(--gw-s9), calc((100% - 960px) / 2));
+  padding-right: max(var(--gw-s9), calc((100% - 960px) / 2));
+}
+
 /* 窄屏：右栏收窄；更窄时隐藏右栏（内容仍可从中间区域进入） */
 @media (max-width: 1440px) {
   .wb {
     grid-template-columns: var(--gw-nav-w) minmax(0, 1fr) 340px;
   }
+  .wb--no-aside {
+    grid-template-columns: var(--gw-nav-w) minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 1180px) {
-  .wb {
+  .wb,
+  .wb--no-aside {
     grid-template-columns: 68px minmax(0, 1fr);
   }
   .wb__aside {

@@ -9,12 +9,11 @@
  *  不能创建正式审核任务、不能批次审核、不能生成通过率、不能改变风险状态、
  *  不能执行终审/签名/批准/关闭。
  */
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { ApiError, apiPost, apiUpload } from '@/api/client'
 import ConversationThread, { type Message } from '@/components/ConversationThread.vue'
 import type { TraceStep } from '@/components/ReasoningTrace.vue'
 import Composer from '@/components/Composer.vue'
-import PanelCard from '@/components/PanelCard.vue'
 
 interface RiskItem {
   riskType: string
@@ -53,26 +52,6 @@ messages.value.push({
     '涉及要对外发布的一批材料时，建议转为正式审核任务，由法务逐条确认并留痕。',
   time: nowLabel(),
 })
-
-const levelLabel: Record<string, string> = { HIGH: '高', MEDIUM: '中', LOW: '低' }
-const levelClass: Record<string, string> = {
-  HIGH: 'gw-level gw-level--high',
-  MEDIUM: 'gw-level gw-level--medium',
-  LOW: 'gw-level gw-level--low',
-}
-
-const typeLabel: Record<string, string> = {
-  ABSOLUTE_CLAIM: '绝对化宣传',
-  EVIDENCE_MISSING: '无依据数据',
-  SAFETY_PROMISE: '安全承诺',
-  COMPETITOR_COMPARISON: '竞品比较',
-  PRICE_CLAIM: '价格宣传',
-  DISCLAIMER_MISSING: '免责声明缺失',
-  MISLEADING: '可能误导',
-  OTHER: '其他',
-}
-
-const riskCount = computed(() => risks.value.length)
 
 async function onSend(text: string) {
   errorText.value = null
@@ -183,54 +162,21 @@ async function onPromote() {
       @remove-attachment="attachment = null"
     />
 
-    <Teleport defer to="#wb-aside">
-      <!-- 本次咨询识别出的风险 -->
-      <PanelCard v-if="riskCount" title="识别到的风险" :hint="`${riskCount} 处`" flush>
-        <ul class="rl">
-          <li v-for="(r, i) in risks" :key="i" class="rl__item" :data-level="r.riskLevel">
-            <div class="rl__top">
-              <span :class="levelClass[r.riskLevel] ?? 'gw-level gw-level--low'">
-                {{ levelLabel[r.riskLevel] ?? '低' }}
-              </span>
-              <span class="rl__type">{{ typeLabel[r.riskType] ?? r.riskType }}</span>
-            </div>
-            <p class="rl__text">{{ r.riskText }}</p>
-            <p class="rl__reason">{{ r.reason }}</p>
-            <div v-if="r.recommendedCopy" class="rl__fix">
-              <span class="rl__fix-label">建议改为</span>
-              <span class="rl__fix-text">{{ r.recommendedCopy }}</span>
-            </div>
-          </li>
-        </ul>
-      </PanelCard>
-
-      <PanelCard v-else title="识别到的风险" hint="暂无">
-        <p class="empty">输入宣传语或文案后，识别到的风险点会显示在这里。</p>
-      </PanelCard>
-
-      <!-- 转为正式审核 -->
-      <PanelCard title="转为正式审核">
-        <dl class="gw-kv">
-          <div class="gw-kv__row"><dt>进入模块</dt><dd>接收区</dd></div>
-          <div class="gw-kv__row"><dt>状态</dt><dd>{{ needsFormal ? '建议转正式审核' : '可选' }}</dd></div>
-        </dl>
-        <div class="gw-btn-row">
-          <button class="gw-btn gw-btn--primary gw-btn--block" type="button" @click="onPromote">
-            转为正式审核任务
-          </button>
-        </div>
-      </PanelCard>
-
-      <!-- 能力边界 -->
-      <PanelCard title="助手不做这些">
-        <ul class="limits">
-          <li>不创建正式审核任务</li>
-          <li>不对多份材料做批次审核</li>
-          <li>不生成批次通过率，也不改变风险状态</li>
-          <li>不执行终审、签名、批准或风险关闭</li>
-        </ul>
-      </PanelCard>
-    </Teleport>
+    <!--
+      转为正式审核：助手不设右侧分栏，因此把这个唯一的跨模块动作放在对话流末尾。
+      它只在本次咨询确实识别出风险、或输入较长时才出现，避免成为常驻噪音。
+    -->
+    <div v-if="needsFormal" class="promote">
+      <div class="promote__text">
+        <span class="promote__title">本次咨询涉及对外发布内容</span>
+        <span class="promote__sub">
+          可转为正式审核任务，由法务逐条确认并留痕（不会自动创建任务）
+        </span>
+      </div>
+      <button class="gw-btn gw-btn--primary" type="button" @click="onPromote">
+        转为正式审核任务
+      </button>
+    </div>
   </div>
 </template>
 
@@ -248,6 +194,42 @@ async function onPromote() {
   background: var(--gw-warning-bg);
   font-size: var(--gw-fs-sm);
   color: var(--gw-text-secondary);
+  line-height: var(--gw-lh);
+}
+
+/* ── 转为正式审核（对话流末尾的跨模块动作）──────────────────────────── */
+.promote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-s5);
+  max-width: 920px;
+  margin-top: var(--gw-s5);
+  padding: var(--gw-s4) var(--gw-s5);
+  border: 1px solid var(--gw-line);
+  border-left: 3px solid var(--gw-accent);
+  border-radius: var(--gw-r);
+  background: var(--gw-surface);
+  box-shadow: var(--gw-elev-1);
+}
+
+.promote__text {
+  min-width: 0;
+}
+
+.promote__title {
+  display: block;
+  font-size: var(--gw-fs-md);
+  font-weight: 600;
+  color: var(--gw-text);
+  line-height: 1.4;
+}
+
+.promote__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--gw-fs-sm);
+  color: var(--gw-text-tertiary);
   line-height: var(--gw-lh);
 }
 

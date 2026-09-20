@@ -30,6 +30,14 @@ export interface ModuleMeta {
   apiPrefix: string
   /** 是否属于正式审核流程（助手不属于） */
   inFormalFlow: boolean
+  /**
+   * 是否需要右侧分栏。
+   *
+   * 助手是纯对话场景，右栏的信息（风险清单、转正式审核、能力边界）都已并入
+   * 对话流本身，多一栏只会挤压输入与阅读宽度，因此为 false。
+   * 其余三个模块右栏承载的是结构化结果（分类统计、进度、时间线），必须保留。
+   */
+  hasAside: boolean
 }
 
 export const MODULES: ModuleMeta[] = [
@@ -42,6 +50,7 @@ export const MODULES: ModuleMeta[] = [
     statusHints: ['单条咨询', '临时上传', '可转正式任务'],
     apiPrefix: '/api/assistant',
     inFormalFlow: false,
+    hasAside: false,
   },
   {
     key: 'intake',
@@ -52,6 +61,7 @@ export const MODULES: ModuleMeta[] = [
     statusHints: ['任务信息', '解析进度', '审核要求'],
     apiPrefix: '/api/intake',
     inFormalFlow: true,
+    hasAside: true,
   },
   {
     key: 'feedback',
@@ -62,6 +72,7 @@ export const MODULES: ModuleMeta[] = [
     statusHints: ['物料三分类', '风险定位', '人工判断'],
     apiPrefix: '/api/feedback',
     inFormalFlow: true,
+    hasAside: true,
   },
   {
     key: 'finalReview',
@@ -72,6 +83,7 @@ export const MODULES: ModuleMeta[] = [
     statusHints: ['版本时间线', 'AI 复审', '法务签名'],
     apiPrefix: '/api/final-review',
     inFormalFlow: true,
+    hasAside: true,
   },
 ]
 
