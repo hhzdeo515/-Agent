@@ -42,6 +42,9 @@ const ACTOR = {
     'material.approve', 'material.revoke_approval',
     'report.view', 'report.export',
     'assistant.use', 'assistant.file_upload', 'assistant.to_formal_case',
+    // AI 调用配置（模型型号、超时、API Key）会改变所有审核结论的可比性，
+    // 后端按运维级权限点校验，联调主体需一并带上，否则设置面板读不到也存不下
+    'admin.config',
   ].join(','),
 }
 
@@ -82,6 +85,27 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   const traceId = newTraceId()
   const resp = await fetch(path, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'X-Trace-Id': traceId,
+      'X-Actor-User-Id': ACTOR.userId,
+      'X-Actor-Permissions': ACTOR.permissions,
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  return handle<T>(resp)
+}
+
+/**
+ * 整体替换式更新（设置类接口）。
+ *
+ * 与 apiPost 的区别只在方法：设置面板保存的是"这一组配置的新状态"，
+ * 反复 POST 会让后端难以区分"创建"与"覆盖"，也会让审计日志里出现语义错误的动作名。
+ */
+export async function apiPut<T>(path: string, body?: unknown): Promise<T> {
+  const traceId = newTraceId()
+  const resp = await fetch(path, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'X-Trace-Id': traceId,

@@ -1,24 +1,18 @@
 <script setup lang="ts">
 /**
- * 左侧导航：三个技能切换标签 + 左下角个人信息。
+ * 左侧导航：技能切换标签 + 左下角用户区（设置入口）。
  *
  * 每个技能标签带一条自己的点缀色竖条，使模块可区分但整体仍统一在墨青体系里。
+ *
+ * 左下角原来有两块常驻信息（AI 能力状态条与个人信息），现在合并成一个入口：
+ * 它们回答的是同一个问题——"我以什么身份、用什么能力在看这个工作台"，
+ * 而 AI 供应商与模型型号是低频的运维配置，不该天天占着导航底部的视觉重量。
  */
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { MODULES, type ModuleKey } from '@/config/modules'
-import AiStatusPanel from '@/components/AiStatusPanel.vue'
+import UserPanel from '@/components/UserPanel.vue'
 
 const props = defineProps<{ active: ModuleKey }>()
-
-// 演示用身份。接入登录后应来自 /api/me，且权限点绝不从客户端声明（04 文档 §1.8）
-const user = {
-  name: '林砚',
-  role: '法务审核',
-  dept: '法律合规部',
-}
-
-const initials = computed(() => user.name.slice(0, 1))
 </script>
 
 <template>
@@ -71,25 +65,9 @@ const initials = computed(() => user.name.slice(0, 1))
 
     <div class="nav__spacer" />
 
-    <!-- ── AI 能力状态：常驻显示当前用的是规则实现还是千问大模型 ──── -->
-    <AiStatusPanel />
-
-    <!-- ── 左下角：个人信息 ──────────────────────────────────────── -->
+    <!-- ── 左下角：身份 + 设置入口 ───────────────────────────────── -->
     <div class="nav__rule" />
-    <div class="nav__user">
-      <div class="nav__avatar" aria-hidden="true">{{ initials }}</div>
-      <div class="nav__user-text">
-        <div class="nav__user-name gw-truncate">{{ user.name }}</div>
-        <div class="nav__user-meta gw-truncate">{{ user.role }} · {{ user.dept }}</div>
-      </div>
-      <button class="nav__user-more" type="button" title="账户与设置" aria-label="账户与设置">
-        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
-          <circle cx="8" cy="3.2" r="1.3" />
-          <circle cx="8" cy="8" r="1.3" />
-          <circle cx="8" cy="12.8" r="1.3" />
-        </svg>
-      </button>
-    </div>
+    <UserPanel />
   </nav>
 </template>
 
@@ -215,64 +193,8 @@ const initials = computed(() => user.name.slice(0, 1))
   min-height: var(--gw-s6);
 }
 
-/* ── 左下角个人信息 ───────────────────────────────────────────────── */
-.nav__user {
-  display: flex;
-  align-items: center;
-  gap: var(--gw-s3);
-  padding: var(--gw-s4) var(--gw-s2) var(--gw-s2);
-}
-
-.nav__avatar {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  flex: none;
-  border-radius: var(--gw-r);
-  background: var(--gw-ink-100);
-  color: var(--gw-ink-700);
-  font-size: var(--gw-fs-base);
-  font-weight: 600;
-}
-
-.nav__user-text {
-  min-width: 0;
-  flex: 1;
-}
-
-.nav__user-name {
-  font-size: var(--gw-fs-base);
-  font-weight: 500;
-  color: var(--gw-text);
-  line-height: 1.3;
-}
-
-.nav__user-meta {
-  font-size: var(--gw-fs-xs);
-  color: var(--gw-text-tertiary);
-  line-height: 1.4;
-}
-
-.nav__user-more {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border: 0;
-  border-radius: var(--gw-r-sm);
-  background: transparent;
-  color: var(--gw-text-tertiary);
-  transition: background var(--gw-dur-fast) var(--gw-ease), color var(--gw-dur-fast) var(--gw-ease);
-}
-
-.nav__user-more:hover {
-  background: var(--gw-bg-sunken);
-  color: var(--gw-text-secondary);
-}
-
-/* 窄屏：只留点缀色，避免挤压 */
+/* ── 窄屏：只留点缀色，避免挤压 ─────────────────────────────────────
+   左下角用户区自己的窄屏适配在 UserPanel 内（它有头像可退化成图标）。 */
 @media (max-width: 1180px) {
   .nav {
     padding-left: var(--gw-s2);
@@ -280,19 +202,12 @@ const initials = computed(() => user.name.slice(0, 1))
   }
   .nav__brand-text,
   .nav__item-name,
-  .nav__user-text,
   .nav__caption {
     display: none;
   }
   .nav__item {
     justify-content: center;
     padding: 10px 0;
-  }
-  .nav__user {
-    justify-content: center;
-  }
-  .nav__user-more {
-    display: none;
   }
 }
 </style>
