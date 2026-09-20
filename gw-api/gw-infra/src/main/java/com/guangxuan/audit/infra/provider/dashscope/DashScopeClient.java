@@ -179,6 +179,21 @@ public class DashScopeClient {
      */
     private JsonNode exchange(String url, Object body, String model, String label,
                               Map<String, String> extraHeaders) {
+        // 没配 Key 就别发请求。
+        //
+        // 不这么做的话，请求会带着空 Bearer 打到阿里云，换回一个
+        // "You didn't provide an API key" 的 401，再被下面统一映射成
+        // "API Key 无效或与所选区域不匹配" —— 那是**错误的排查方向**：
+        // 用户会去检查区域和 Key 是否写错，而真正的问题是根本没填。
+        // 一次网络往返也是白花的。
+        String apiKey = props.getDashscope().getApiKey();
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new DomainException(ErrorCode.AI_PROVIDER_UNAVAILABLE,
+                    "尚未配置百炼 API Key，无法调用千问模型。"
+                            + "请在左下角「设置 → AI 调用」中填写 API Key，"
+                            + "或把供应商切回规则实现（mock）。");
+        }
+
         int maxAttempts = Math.max(1, props.getHttp().getMaxAttempts());
         long backoff = props.getHttp().getBackoffBaseMs();
         RuntimeException last = null;

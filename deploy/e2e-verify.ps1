@@ -29,7 +29,11 @@ $legalPerms = @(
   'risk.sign','risk.close',
   'version.view','version.upload','version.diff_view',
   'material.approve','material.revoke_approval',
-  'report.view','report.export'
+  'report.view','report.export',
+  # 第 17 节验证"未配 Key 时助手会明确报错"，因此联调主体需要助手权限。
+  # 缺了它，那一节会因为 403 被误判成"报错信息不对"——
+  # 权限问题与配置问题必须能被区分开，否则测试会给出错误的结论。
+  'assistant.use'
 ) -join ','
 
 # 品牌方主体：刻意不含确认风险与批准权限，用于验证越权会被拒绝
@@ -420,6 +424,25 @@ Check "风险处理轨迹完整" ($records.code -eq 0 -and $records.data.Count -
 Write-Host "  审核记录数=$($records.data.Count)"
 $records.data | ForEach-Object {
   Write-Host ("    - " + $_.action + " : " + $_.fromStatus + " -> " + $_.toStatus + " [" + $_.actorType + "]")
+}
+
+Write-Host "`n=== 17. 未配 Key 时必须明确报错，不得静默退回规则实现 ===" -ForegroundColor Cyan
+# 放在最后：这一段会临时切换供应商，跑完必定切回原值。
+# 用 try/finally 保证即使断言中间抛异常，也不会把环境留在 dashscope 上——
+# 否则下一次跑 E2E 时主链路会因为"没有 Key"而全线失败，排查方向被带偏。
+$providerBefore = (Call GET '/api/settings/ai' $null $adminPerms).data.provider
+try {
+  Call PUT '/api/settings/ai' @{ apiKey = ''; provider = 'dashscope' } $adminPerms | Out-Null
+  $noKey = Call POST '/api/assistant/chat' @{ message = '未配 Key 时应当明确报错' } $legalPerms
+  Check "未配 Key 时不静默降级（报错而非返回规则实现结果）" `
+    ($noKey.__httpStatus -ge 400 -or $noKey.code -ne 0) ($noKey | ConvertTo-Json -Compress)
+  $msg = if ($noKey.__error) { $noKey.__error } else { "$($noKey.message)" }
+  Check "报错指出是缺少 API Key" ($msg -match 'API Key') ("msg=" + $msg)
+  Check "报错给出可操作的下一步" ($msg -match '设置') ("msg=" + $msg)
+} finally {
+  Call PUT '/api/settings/ai' @{ provider = $providerBefore } $adminPerms | Out-Null
+  $restored = (Call GET '/api/settings/ai' $null $adminPerms).data.provider
+  Check "供应商已还原为 $providerBefore" ($restored -eq $providerBefore) ("实际=" + $restored)
 }
 
 Write-Host "`n============================================" -ForegroundColor Cyan
