@@ -49,7 +49,7 @@ const initials = computed(() => user.name.slice(0, 1))
 
     <div class="nav__rule" />
 
-    <!-- ── 三个技能模块切换 ──────────────────────────────────────── -->
+    <!-- ── 模块切换：只保留模块名，副标题（职责说明）已移除 ──────── -->
     <div class="nav__section">
       <div class="nav__caption gw-label">技能模块</div>
       <ul class="nav__list">
@@ -59,13 +59,10 @@ const initials = computed(() => user.name.slice(0, 1))
             class="nav__item"
             :class="{ 'is-active': props.active === m.key }"
             :data-tone="m.tone"
-            :title="m.desc"
+            :title="m.role"
           >
             <span class="nav__accent" aria-hidden="true" />
-            <span class="nav__item-body">
-              <span class="nav__item-name">{{ m.name }}</span>
-              <span class="nav__item-role">{{ m.role }}</span>
-            </span>
+            <span class="nav__item-name">{{ m.name }}</span>
           </RouterLink>
         </li>
       </ul>
@@ -160,7 +157,7 @@ const initials = computed(() => user.name.slice(0, 1))
   display: flex;
   align-items: center;
   gap: var(--gw-s3);
-  padding: 9px var(--gw-s2) 9px var(--gw-s3);
+  padding: 10px var(--gw-s2) 10px var(--gw-s3);
   border-radius: var(--gw-r);
   color: var(--gw-text-secondary);
   transition: background var(--gw-dur-fast) var(--gw-ease),
@@ -201,28 +198,12 @@ const initials = computed(() => user.name.slice(0, 1))
   background: var(--tone);
 }
 
-.nav__item-body {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
 .nav__item-name {
   font-size: var(--gw-fs-md);
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.3;
-}
-
-.nav__item-role {
-  font-size: var(--gw-fs-xs);
-  color: var(--gw-text-tertiary);
-  line-height: 1.4;
-  margin-top: 1px;
-}
-
-.nav__item.is-active .nav__item-role {
-  color: var(--gw-text-secondary);
+  min-width: 0;
 }
 
 .nav__spacer {
@@ -287,14 +268,14 @@ const initials = computed(() => user.name.slice(0, 1))
   color: var(--gw-text-secondary);
 }
 
-/* 窄屏：只留点缀色与首字母，避免挤压 */
+/* 窄屏：只留点缀色，避免挤压 */
 @media (max-width: 1180px) {
   .nav {
     padding-left: var(--gw-s2);
     padding-right: var(--gw-s2);
   }
   .nav__brand-text,
-  .nav__item-body,
+  .nav__item-name,
   .nav__user-text,
   .nav__caption {
     display: none;
