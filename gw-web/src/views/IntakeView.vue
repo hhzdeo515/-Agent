@@ -6,7 +6,7 @@
  * 边界：本模块只把任务与材料规范地送入审核系统，
  *      **不提前展示最终风险结论** —— 因此右栏只有任务/进度/要求，没有风险条目。
  */
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import ConversationThread, { type Message } from '@/components/ConversationThread.vue'
 import PanelCard from '@/components/PanelCard.vue'
 import FileDropzone from '@/components/FileDropzone.vue'
@@ -14,10 +14,13 @@ import FileDropzone from '@/components/FileDropzone.vue'
 /**
  * 当前任务的 id。
  *
- * 真实环境应从路由参数或任务列表进入；这里为了能直接演示上传与解析链路，
- * 用一个 ref 承载，并由「新建任务」动作写入真实 id。
+ * 进入模块时自动准备一个草稿任务，使用户可以立刻拖拽上传——
+ * 否则上传区会显示"请先创建审核任务"并处于禁用态，看起来像"功能用不了"。
+ * 草稿任务尚未上传材料时不影响任何统计口径（未进入初审就不计入通过率分母）。
  */
 const caseId = ref<number | null>(null)
+const caseNo = ref<string>('')
+const preparing = ref(false)
 /** 上传并解析成功的物料数，用于侧栏进度 */
 const uploadedCount = ref(0)
 
@@ -25,29 +28,43 @@ function onUploaded() {
   uploadedCount.value += 1
 }
 
-async function createCase() {
-  const { apiPost } = await import('@/api/client')
+/** 准备任务：已有则复用，没有则自动建一个草稿 */
+async function ensureCase(): Promise<number | null> {
+  if (caseId.value) return caseId.value
+  if (preparing.value) return null
+  preparing.value = true
   try {
+    const { apiPost } = await import('@/api/client')
     const c = await apiPost<{ id: number; caseNo: string }>('/api/intake/cases', {
       projectId: 1,
       name: '新一批宣传物料审核',
     })
     caseId.value = c.id
-    messages.value.push({
-      id: 'sys' + Date.now(),
-      role: 'agent',
-      text: `任务已建立：${c.caseNo}。现在可以上传材料了。`,
-      time: new Date().toTimeString().slice(0, 5),
-    })
+    caseNo.value = c.caseNo
+    return c.id
   } catch (e) {
     messages.value.push({
       id: 'err' + Date.now(),
       role: 'agent',
-      text: '创建任务失败：' + (e instanceof Error ? e.message : '未知错误'),
+      text: '任务准备失败：' + (e instanceof Error ? e.message : '未知错误')
+        + '\n请确认后端服务已启动（http://localhost:8080）。',
       time: new Date().toTimeString().slice(0, 5),
       tone: 'warning',
     })
+    return null
+  } finally {
+    preparing.value = false
   }
+}
+
+// 进入模块即准备任务，让上传区立即可用
+onMounted(() => {
+  void ensureCase()
+})
+
+async function createCase() {
+  caseId.value = null
+  await ensureCase()
 }
 
 const messages = ref<Message[]>([
@@ -151,12 +168,13 @@ const requirements = [
     <section class="intake-upload">
       <div class="intake-upload__head">
         <h2 class="intake-upload__title">材料接收</h2>
-        <button v-if="!caseId" class="gw-btn gw-btn--primary" type="button" @click="createCase">
-          新建审核任务
-        </button>
-        <span v-else class="gw-status gw-status--ink">
-          <span class="gw-status__dot" />任务 #{{ caseId }} · 已上传 {{ uploadedCount }} 份
+        <span v-if="caseId" class="gw-status gw-status--ink">
+          <span class="gw-status__dot" />{{ caseNo }} · 已上传 {{ uploadedCount }} 份
         </span>
+        <span v-else-if="preparing" class="gw-status gw-status--muted">正在准备任务…</span>
+        <button v-else class="gw-btn gw-btn--primary" type="button" @click="createCase">
+          重新准备任务
+        </button>
       </div>
       <FileDropzone :case-id="caseId" @uploaded="onUploaded" />
     </section>

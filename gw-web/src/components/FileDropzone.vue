@@ -135,7 +135,9 @@ function removeItem(id: string) {
         stroke-width="1.5" stroke-linecap="round" />
     </svg>
     <div class="dz__text">
-      <span class="dz__title">{{ caseId ? '拖拽文件到此处，或点击选择' : '请先创建审核任务' }}</span>
+      <span class="dz__title">
+        {{ caseId ? '拖拽文件到此处，或点击选择' : '正在准备审核任务…' }}
+      </span>
       <span class="dz__sub">图片 · 视频 · PPT · PDF · Word · 文本，可多选</span>
     </div>
     <span v-if="busy" class="dz__spin" aria-hidden="true" />
