@@ -9,17 +9,27 @@
  */
 import { computed, nextTick, ref } from 'vue'
 
-const props = defineProps<{
-  /** 发送中时禁用输入 */
-  sending?: boolean
-  placeholder?: string
-  /** 是否允许附件（助手允许；某些场景不需要） */
-  allowAttach?: boolean
-  /** 已附加的文件名 */
-  attachmentName?: string
-  /** 附件上传中 */
-  uploading?: boolean
-}>()
+/**
+ * ⚠️ 必须用 withDefaults 给 allowAttach 一个 true 默认值。
+ *
+ * Vue 对声明为 Boolean 类型的 prop，在**未传值时会强制转换为 false**（不是 undefined）。
+ * 因此 `allowAttach !== false` 在不传时恒为 false，按钮永远不会出现——
+ * 这个坑排查了很久，因为编译、类型检查、构建全部通过，只是按钮静默消失。
+ */
+const props = withDefaults(
+  defineProps<{
+    /** 发送中时禁用输入 */
+    sending?: boolean
+    placeholder?: string
+    /** 是否允许附件（助手允许；某些场景不需要） */
+    allowAttach?: boolean
+    /** 已附加的文件名 */
+    attachmentName?: string
+    /** 附件上传中 */
+    uploading?: boolean
+  }>(),
+  { allowAttach: true },
+)
 
 const emit = defineEmits<{
   (e: 'send', text: string): void
@@ -31,6 +41,15 @@ const text = ref('')
 const ta = ref<HTMLTextAreaElement | null>(null)
 
 const canSend = computed(() => text.value.trim().length > 0 && !props.sending)
+
+/**
+ * 是否显示「选择文件」入口。
+ *
+ * 用显式 computed 而不是模板里的 `allowAttach !== false`：
+ * 后者依赖"未传即 undefined"这一隐含前提，一旦某个调用方传了别的值，
+ * 判断就会静默变成 false，按钮消失且没有任何报错（已经踩过一次）。
+ */
+const showAttach = computed(() => props.allowAttach !== false)
 
 function autoGrow() {
   const el = ta.value
@@ -100,19 +119,19 @@ function pickFile() {
       />
 
       <div class="composer__bar">
+        <!-- 明确的文字链接而非仅有图标：图标入口容易被当成装饰而看不见 -->
         <button
-          v-if="allowAttach !== false"
-          class="composer__icon"
+          v-if="showAttach"
+          class="composer__link"
           type="button"
-          title="附加文件"
-          aria-label="附加文件"
           :disabled="sending || uploading"
           @click="pickFile"
         >
-          <svg viewBox="0 0 18 18" width="15" height="15" fill="none" aria-hidden="true">
-            <path d="M10.8 5.4 6.3 9.9a2 2 0 0 0 2.9 2.9l4.8-4.8a3.5 3.5 0 0 0-5-5L4.1 7.9a5 5 0 0 0 7 7l3.7-3.7"
-              stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" aria-hidden="true">
+            <path d="M9.6 4.8 5.6 8.8a1.8 1.8 0 0 0 2.6 2.6l4.3-4.3a3.1 3.1 0 0 0-4.4-4.4L4 6.9a4.4 4.4 0 0 0 6.2 6.2l3.3-3.3"
+              stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
+          {{ uploading ? '上传中…' : '选择文件' }}
         </button>
         <span class="composer__hint">Enter 发送 · Shift+Enter 换行</span>
         <button class="composer__send" type="button" :disabled="!canSend" @click="submit">
@@ -220,27 +239,36 @@ function pickFile() {
   padding: var(--gw-s2) var(--gw-s3) var(--gw-s3);
 }
 
-.composer__icon {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
+/* 选择文件：文字链接样式，比图标更容易被发现 */
+.composer__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 var(--gw-s2);
   flex: none;
   border: 0;
   border-radius: var(--gw-r-sm);
   background: transparent;
-  color: var(--gw-text-tertiary);
-  transition: background var(--gw-dur-fast) var(--gw-ease), color var(--gw-dur-fast) var(--gw-ease);
+  color: var(--gw-accent-text);
+  font-size: var(--gw-fs-sm);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  transition: background var(--gw-dur-fast) var(--gw-ease),
+    text-decoration-color var(--gw-dur-fast) var(--gw-ease);
 }
 
-.composer__icon:hover:not(:disabled) {
-  background: var(--gw-bg-sunken);
-  color: var(--gw-text-secondary);
+.composer__link:hover:not(:disabled) {
+  background: var(--gw-accent-faint);
+  text-decoration-color: currentColor;
 }
 
-.composer__icon:disabled {
-  opacity: 0.4;
+.composer__link:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+  text-decoration: none;
 }
 
 .composer__hint {
