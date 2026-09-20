@@ -118,9 +118,24 @@ services:
       GW_MINIO_ACCESS_KEY: ${GW_MINIO_ACCESS_KEY:-minioadmin}
       GW_MINIO_SECRET_KEY: ${GW_MINIO_SECRET_KEY:-minioadmin}
       GW_MINIO_BUCKET: ${GW_MINIO_BUCKET:-gw-audit}
-      # AI 供应商：mock（默认，无需 API Key）| dashscope
+      # AI 供应商：mock（默认，无需 API Key）| dashscope（千问大模型，需 API Key）
       GW_AI_PROVIDER: ${GW_AI_PROVIDER:-mock}
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      # 可选：使用业务空间专属域名时覆盖（官方建议迁移，性能与稳定性更好）
+      DASHSCOPE_BASE_URL: ${DASHSCOPE_BASE_URL:-https://dashscope.aliyuncs.com}
+      DASHSCOPE_COMPAT_BASE_URL: ${DASHSCOPE_COMPAT_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      # 模型型号与调用参数：留空即用 application.yml 的默认值
+      GW_MODEL_TEXT: ${GW_MODEL_TEXT:-}
+      GW_MODEL_VISION: ${GW_MODEL_VISION:-}
+      GW_MODEL_OCR_PRIMARY: ${GW_MODEL_OCR_PRIMARY:-}
+      GW_MODEL_OCR_FALLBACK: ${GW_MODEL_OCR_FALLBACK:-}
+      GW_MODEL_ASR: ${GW_MODEL_ASR:-}
+      # 数值型配置必须给真实默认值，不能写 ${VAR:-}：
+      # 空字符串会被 Spring 当成"要绑定的值"去转 int，直接导致启动失败
+      # （A null value cannot be assigned to a primitive type）。
+      # 这里与 application.yml 的默认值保持一致。
+      GW_AI_READ_TIMEOUT_MS: ${GW_AI_READ_TIMEOUT_MS:-120000}
+      GW_AI_MAX_ATTEMPTS: ${GW_AI_MAX_ATTEMPTS:-3}
       GW_JWT_SECRET: ${GW_JWT_SECRET:-local-dev-secret-change-me-at-least-32-bytes}
       GW_LOG_LEVEL: ${GW_LOG_LEVEL:-INFO}
     ports:

@@ -65,6 +65,13 @@ public class MockParseAdapter implements ParsePort {
         throw new DomainException(ErrorCode.UNSUPPORTED_FILE_TYPE, MOCK_LIMIT_MESSAGE);
     }
 
+    @Override
+    public VisionResult vision(VisionRequest request) {
+        // 画面语义需要视觉理解模型。Mock 没有这个能力，如实拒绝，
+        // 而不是返回一段编出来的"画面描述"——那会变成凭空生成的风险依据。
+        throw new DomainException(ErrorCode.UNSUPPORTED_FILE_TYPE, MOCK_LIMIT_MESSAGE);
+    }
+
     /**
      * 文档解析：纯文本读真实内容；其余格式明确拒绝。
      */

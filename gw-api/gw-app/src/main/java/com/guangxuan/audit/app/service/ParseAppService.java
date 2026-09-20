@@ -194,12 +194,67 @@ public class ParseAppService {
             ordinal++;
             out.add(anchor(v, "A-" + String.format("%04d", ordinal),
                     AnchorType.TEXT_LINE,
-                    locatorForTextLine(line), line.text(),
+                    ocr.localized() ? locatorForTextLine(line) : locatorNotLocalized(ocr),
+                    line.text(),
                     line.confidence() == null ? null
                             : BigDecimal.valueOf(line.confidence()).setScale(4, RoundingMode.HALF_UP),
                     ocr.engine(), ocr.engineVersion(), ordinal));
         }
+        log.info("图片解析 {}：引擎={} 文字行={} 是否带坐标={}",
+                v.getId(), ocr.engine(), out.size(), ocr.localized());
+
+        // 画面语义：文字之外的风险（未标注依据的对比图、暗示功效的画面等）只能靠视觉理解。
+        // 失败不影响文字锚点——但会在日志中留痕，界面据锚点数量自然表现为"部分解析"。
+        try {
+            ParsePort.VisionResult vision = parsePort.vision(new ParsePort.VisionRequest(
+                    v.getFileObjectKey(), v.getMimeType(), null));
+            if (vision.description() != null && !vision.description().isBlank()) {
+                ordinal++;
+                out.add(anchor(v, "A-" + String.format("%04d", ordinal),
+                        AnchorType.KEY_FRAME,
+                        locatorWholeFrame(vision),
+                        composeVisionText(vision),
+                        null, vision.engine(), vision.engineVersion(), ordinal));
+            }
+        } catch (Exception e) {
+            log.warn("画面语义理解失败（文字锚点不受影响）material={}：{}", v.getId(), e.getMessage());
+        }
         return out;
+    }
+
+    /** 画面语义锚点的定位：整幅画面，不假装能框到具体位置 */
+    private String locatorWholeFrame(ParsePort.VisionResult vision) {
+        return String.format(
+                "{\"region\":\"FULL_FRAME\",\"localized\":false,\"engine\":\"%s\","
+                        + "\"note\":\"画面语义结论对应整幅画面\"}",
+                vision.engine() == null ? "unknown" : vision.engine());
+    }
+
+    /** 描述与逐条观察合成一段可审核文本，让风险识别阶段能像读文字一样读画面 */
+    private String composeVisionText(ParsePort.VisionResult vision) {
+        StringBuilder sb = new StringBuilder("【画面】").append(vision.description().trim());
+        if (vision.findings() != null && !vision.findings().isEmpty()) {
+            for (String f : vision.findings()) {
+                if (f != null && !f.isBlank()) {
+                    sb.append("\n【画面要素】").append(f.trim());
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 引擎不返回坐标时的定位。
+     *
+     * <p>刻意写成"没有坐标"而不是补一个假 bbox：假坐标在界面上会显示成一个
+     * 精确的框，法务据此去找却找不到，比直接说明"只能定位到文字、不能框选"更糟。
+     */
+    private String locatorNotLocalized(ParsePort.OcrResult ocr) {
+        return String.format(
+                "{\"localized\":false,\"engine\":\"%s\","
+                        + "\"note\":\"该识别引擎只返回文字、不返回文字坐标，无法精确框选；"
+                        + "定位依据为识别到的文字本身\"}",
+                ocr.engine() == null ? "unknown" : ocr.engine());
     }
 
     private List<EvidenceAnchorEntity> parseAsVideo(MaterialVersionEntity v) {

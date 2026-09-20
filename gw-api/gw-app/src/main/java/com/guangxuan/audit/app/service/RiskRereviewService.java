@@ -6,6 +6,7 @@ import com.guangxuan.audit.common.enums.RiskType;
 import com.guangxuan.audit.common.error.DomainException;
 import com.guangxuan.audit.common.error.ErrorCode;
 import com.guangxuan.audit.common.security.PermCode;
+import com.guangxuan.audit.domain.port.AiInferencePort;
 import com.guangxuan.audit.domain.risk.ReviewScope;
 import com.guangxuan.audit.domain.security.Actor;
 import com.guangxuan.audit.infra.persistence.entity.EvidenceAnchorEntity;
@@ -60,6 +61,7 @@ public class RiskRereviewService {
 
     private final RiskCaseMapper riskCaseMapper;
     private final EvidenceAnchorMapper anchorMapper;
+    private final AiInferencePort aiInferencePort;
 
     @Value("${gw.ai.pipeline-version:0.1.0}")
     private String pipelineVersion;
@@ -132,6 +134,16 @@ public class RiskRereviewService {
 
         List<EvidenceAnchorEntity> baseText = textual(baseAnchors);
         List<EvidenceAnchorEntity> targetText = textual(targetAnchors);
+
+        // 优先交给模型复审；模型不可用时回落到下面的规则比对。
+        // 顺序刻意是"模型优先"：判断"换个说法之后是不是还在打擦边球"需要语义理解，
+        // 而规则只能判断"原句还在不在"，遇到改写后继续违规的情况会漏。
+        RereviewAnalysis byModel = tryModelRereview(risk, scope, baseText, targetText,
+                targetVersionId);
+        if (byModel != null) {
+            return byModel;
+        }
+        log.info("复审走规则比对（当前 AI 实现不支持模型复审）：risk={}", risk.getRiskNo());
 
         // ── 问题 1：原风险是否已解决 ──────────────────────────────────
         String riskBody = VersionDiffService.normalize(risk.getRiskText());
@@ -215,6 +227,131 @@ public class RiskRereviewService {
     }
 
     // ════════════════════════════════════════════════════════════════════
+    // 模型复审
+    // ════════════════════════════════════════════════════════════════════
+
+    /**
+     * 交给模型做复审。
+     *
+     * @return 模型结论；{@code null} 表示当前 AI 实现不支持模型复审，调用方应回落规则比对
+     */
+    private RereviewAnalysis tryModelRereview(RiskCaseEntity risk, ReviewScope scope,
+                                             List<EvidenceAnchorEntity> baseText,
+                                             List<EvidenceAnchorEntity> targetText,
+                                             Long targetVersionId) {
+        AiInferencePort.RereviewAnswer answer;
+        try {
+            answer = aiInferencePort.rereview(new AiInferencePort.RereviewRequest(
+                    risk.getRiskText(), risk.getRiskType(), risk.getRiskLevel(),
+                    risk.getLocationDesc(), scope.name(),
+                    toAnchorLines(baseText), toAnchorLines(targetText),
+                    buildChangeSummary(baseText, targetText)));
+        } catch (Exception e) {
+            // 模型调用失败不能把整条复审链路打断，但必须留痕：
+            // 静默回落规则比对会让"这次其实是模型挂了"无从察觉
+            log.warn("模型复审调用失败，回落规则比对：risk={} err={}",
+                    risk.getRiskNo(), e.getMessage());
+            return null;
+        }
+        if (answer == null) {
+            return null;
+        }
+
+        // 新建关联风险：必须校验模型给的锚点 ID 真实存在于新版本，
+        // 否则会建出一条无法定位的风险——那比不建更糟（AGENTS.md 第 5 条）
+        Set<String> validAnchorIds = new HashSet<>();
+        for (EvidenceAnchorEntity a : targetText) {
+            validAnchorIds.add(a.getAnchorId());
+        }
+        List<Long> newRiskIds = new ArrayList<>();
+        List<Map<String, Object>> newRiskSummaries = new ArrayList<>();
+        for (AiInferencePort.NewRisk nr : answer.newRisks()) {
+            if (nr.anchorId() == null || !validAnchorIds.contains(nr.anchorId())) {
+                log.warn("模型报告的新增风险锚点不存在，已丢弃：risk={} anchor={}",
+                        risk.getRiskNo(), nr.anchorId());
+                continue;
+            }
+            EvidenceAnchorEntity anchor = targetText.stream()
+                    .filter(a -> nr.anchorId().equals(a.getAnchorId()))
+                    .findFirst().orElse(null);
+            if (anchor == null) {
+                continue;
+            }
+            Long id = createRelatedRisk(risk, targetVersionId, anchor,
+                    List.of(nr.riskType()), nr.riskLevel(), nr.riskType(), nr.reason());
+            if (id != null) {
+                newRiskIds.add(id);
+                Map<String, Object> brief = new LinkedHashMap<>();
+                brief.put("riskId", id);
+                brief.put("anchorId", nr.anchorId());
+                brief.put("text", nr.text());
+                brief.put("riskType", nr.riskType());
+                newRiskSummaries.add(brief);
+            }
+        }
+
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("reviewedBy", "MODEL");
+        evidence.put("targetVersionId", targetVersionId);
+        evidence.put("reviewScope", scope.name());
+        evidence.put("remainingEvidence", answer.remainingEvidence());
+        evidence.put("modelConfidence", answer.confidence());
+        evidence.put("newRiskCount", newRiskIds.size());
+        evidence.put("reviewedAnchorCount", targetText.size());
+        evidence.put("note", "结论由大模型基于新旧版本原文比对与语义理解给出，非法律判断");
+
+        return new RereviewAnalysis(answer.originalResolved(), answer.remainingRisk(),
+                newRiskIds, newRiskSummaries, evidence, answer.summary());
+    }
+
+    private List<AiInferencePort.AnchorLine> toAnchorLines(List<EvidenceAnchorEntity> anchors) {
+        List<AiInferencePort.AnchorLine> out = new ArrayList<>();
+        for (EvidenceAnchorEntity a : anchors) {
+            out.add(new AiInferencePort.AnchorLine(
+                    a.getAnchorId(), a.getAnchorType(), a.getText(), null, null));
+        }
+        return out;
+    }
+
+    /** 两版差异摘要：让模型聚焦改动区域，而不是从两段长文本里自己找 */
+    private String buildChangeSummary(List<EvidenceAnchorEntity> base,
+                                      List<EvidenceAnchorEntity> target) {
+        Set<String> baseTexts = new HashSet<>();
+        for (EvidenceAnchorEntity a : base) {
+            baseTexts.add(VersionDiffService.normalize(a.getText()));
+        }
+        List<String> removed = new ArrayList<>();
+        for (EvidenceAnchorEntity a : base) {
+            boolean still = target.stream().anyMatch(t ->
+                    VersionDiffService.normalize(t.getText())
+                            .contains(VersionDiffService.normalize(a.getText())));
+            if (!still) {
+                removed.add(a.getText());
+            }
+        }
+        List<String> added = new ArrayList<>();
+        for (EvidenceAnchorEntity a : target) {
+            if (!baseTexts.contains(VersionDiffService.normalize(a.getText()))) {
+                added.add(a.getText());
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("原版本锚点 ").append(base.size())
+                .append(" 个，新版本 ").append(target.size()).append(" 个。");
+        if (removed.isEmpty()) {
+            sb.append("未检测到删除的原文。");
+        } else {
+            sb.append("新版本中已消失：").append(String.join("；", removed)).append("。");
+        }
+        if (added.isEmpty()) {
+            sb.append("未检测到新增原文。");
+        } else {
+            sb.append("新版本中新增：").append(String.join("；", added)).append("。");
+        }
+        return sb.toString();
+    }
+
+    // ════════════════════════════════════════════════════════════════════
     // 新建关联风险
     // ════════════════════════════════════════════════════════════════════
 
@@ -233,6 +370,24 @@ public class RiskRereviewService {
         RiskType type = rule == null
                 ? safeType(origin.getRiskType())
                 : rule.type();
+        return createRelatedRisk(origin, versionId, anchor, hits,
+                level.name(), type.name(),
+                rule == null ? "整改后新增内容命中风险关键词" : rule.reason());
+    }
+
+    /**
+     * 新建关联风险（可指定等级、类型与原因）。
+     *
+     * <p>分成两个入口是因为两类调用方的信息来源不同：规则比对拿到的是命中的关键词，
+     * 类型与等级由规则表决定；模型复审拿到的是模型自己的判断，已经给了类型与等级。
+     * 把两者硬塞进一个签名，只会让其中一方被迫传假值。
+     */
+    private Long createRelatedRisk(RiskCaseEntity origin, Long versionId,
+                                   EvidenceAnchorEntity anchor, List<String> hits,
+                                   String levelOverride, String typeOverride,
+                                   String reasonOverride) {
+        RiskLevel level = safeLevel(levelOverride);
+        RiskType type = safeType(typeOverride == null ? origin.getRiskType() : typeOverride);
 
         String dedupKey = sha256(versionId + "|" + type.name() + "|" + anchor.getAnchorId()
                 + "|" + VersionDiffService.normalize(anchor.getText()));
@@ -258,13 +413,13 @@ public class RiskRereviewService {
         e.setStatus(RiskStatus.PENDING_LEGAL_DECISION.name());
         e.setRiskText(anchor.getText());
         e.setLocationDesc("锚点 " + anchor.getAnchorId() + "（整改后新增内容）");
-        e.setReason((rule == null ? "整改后新增内容命中风险关键词" : rule.reason())
+        e.setReason(reasonOverride
                 + "；由 AI 复审在版本比对中发现，需法务判断是否成立");
         e.setRuleRefs("[]");
         e.setEvidenceRefs("[]");
         e.setUnsupportedClaims("[]");
         e.setSuggestion("建议删除或改为有依据的客观表述");
-        e.setRecommendedCopy(rule == null ? null : ("参照同类型风险的合规表述"));
+        e.setRecommendedCopy("参照同类型风险的合规表述");
         e.setRequiredEvidence("如保留原表述，需提供相应证明材料");
         e.setBlocked(level.isBlocking());
         e.setParentRiskId(origin.getId());
@@ -311,6 +466,15 @@ public class RiskRereviewService {
             }
         }
         return out;
+    }
+
+    /** 等级解析：模型可能给出枚举外的值，落到 MEDIUM 而不是让整条链路失败 */
+    private static RiskLevel safeLevel(String name) {
+        try {
+            return RiskLevel.valueOf(name);
+        } catch (Exception e) {
+            return RiskLevel.MEDIUM;
+        }
     }
 
     private static Map<String, Object> anchorBrief(EvidenceAnchorEntity a, String why) {

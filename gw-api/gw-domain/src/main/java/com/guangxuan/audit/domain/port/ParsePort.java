@@ -40,21 +40,50 @@ public interface ParsePort {
     /** 文档解析（PDF / PPTX / DOCX），产出页码/段落/句子级锚点 */
     DocumentResult parseDocument(DocumentRequest request);
 
+    /**
+     * 画面语义理解。
+     *
+     * <p>OCR 只能拿到文字，而广宣风险里有相当一部分<b>不在文字里</b>：
+     * 未标注依据的对比图、暗示疗效的画面、把竞品拍得很差的镜头。
+     * 这类问题必须靠视觉理解，否则"没识别到文字"会被误读成"没有风险"。
+     *
+     * <p>实现要注意：送给视觉模型的图片必须与送 OCR 的<b>同一张、同尺寸</b>，
+     * 否则画面类风险与文字类风险的定位会互相错位（docs/00 §3.3 约束 1）。
+     */
+    VisionResult vision(VisionRequest request);
+
     // ── 请求 / 响应 DTO ──────────────────────────────────────────────────
 
     /** @param objectKey MinIO 对象键；实现自行取件，不传本机路径 */
     record OcrRequest(String objectKey, String mimeType, String languageHint) {
     }
 
+    /** @param question 针对画面的具体问题；为空时做通用描述 */
+    record VisionRequest(String objectKey, String mimeType, String question) {
+    }
+
     /**
-     * @param lines 识别出的文字行，坐标基于送检图片
+     * @param description 画面整体描述
+     * @param findings    逐条观察到的、可能与广宣合规相关的画面要素
      */
-    record OcrResult(List<OcrLine> lines, String engine, String engineVersion) {
+    record VisionResult(String description, List<String> findings,
+                        String engine, String engineVersion) {
+    }
+
+    /**
+     * @param lines     识别出的文字行
+     * @param localized 是否给出了文字坐标。为 false 时表示该引擎只返回文本、
+     *                  不返回位置（qwen-vl-ocr 的通用文字识别属于这种），
+     *                  此时下游<b>不得</b>编造框选区域，只能标注为"大致区域"。
+     *                  把它显式建模而不是用"坐标全 0"隐式表达，
+     *                  是因为"没有坐标"与"坐标在左上角"必须能被区分开。
+     */
+    record OcrResult(List<OcrLine> lines, boolean localized, String engine, String engineVersion) {
     }
 
     /**
      * @param text       该行文本
-     * @param x,y,w,h    像素坐标，左上原点
+     * @param x,y,w,h    像素坐标，左上原点；{@code localized=false} 时无意义
      * @param confidence 行级置信度，可为 null（部分引擎不提供）
      * @param lineNo     引擎返回的原始行号，便于与供应商结果对账
      */

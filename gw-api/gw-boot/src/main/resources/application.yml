@@ -84,20 +84,29 @@ gw:
     presign-expiry-seconds: 900
 
   ai:
-    provider: ${GW_AI_PROVIDER:mock}    # mock | dashscope
+    provider: ${GW_AI_PROVIDER:mock}    # mock | dashscope（dashscope 需同时提供 DASHSCOPE_API_KEY）
     region: cn-beijing                  # 06/00 文档：必须锁定北京，RPM 600 vs 新加坡 60
     dashscope:
       api-key: ${DASHSCOPE_API_KEY:}
+      # 原生接口：内置 OCR 任务（ocr_options）只有这条路径支持
       base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+      # OpenAI 兼容接口：文本对话、结构化输出走这条
       compatible-base-url: ${DASHSCOPE_COMPAT_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
     models:
       # 具体型号需按 M0 的 V6 实测后锁定；此处为 00 文档 §7.2 的初始建议值
-      vision: ${GW_MODEL_VISION:qwen3-vl-8b-thinking}
-      ocr-primary: ${GW_MODEL_OCR_PRIMARY:qwen-vl-ocr}
-      ocr-fallback: ${GW_MODEL_OCR_FALLBACK:qwen3.5-ocr}
-      asr: ${GW_MODEL_ASR:qwen3-asr-flash-filetrans}
+      text: ${GW_MODEL_TEXT:qwen-plus}                 # 主力文本模型：候选识别/判断/复审/报告/助手
+      vision: ${GW_MODEL_VISION:qwen3-vl-8b-thinking}  # 画面语义理解（支持结构化输出）
+      ocr-primary: ${GW_MODEL_OCR_PRIMARY:qwen-vl-ocr} # 文字识别（支持 Batch，成本约半价）
+      ocr-fallback: ${GW_MODEL_OCR_FALLBACK:qwen3.5-ocr} # 质量兜底（定位能力更新）
+      asr: ${GW_MODEL_ASR:qwen3-asr-flash-filetrans}   # 语音转写（异步，句级/字级毫秒时间戳）
       embedding: ${GW_MODEL_EMBEDDING:text-embedding-v4}
       rerank: ${GW_MODEL_RERANK:qwen3-rerank}
+    http:
+      connect-timeout-ms: ${GW_AI_CONNECT_TIMEOUT_MS:10000}
+      # 视觉与 OCR 是长请求；给太短会表现为"随机失败"，很难排查
+      read-timeout-ms: ${GW_AI_READ_TIMEOUT_MS:120000}
+      max-attempts: ${GW_AI_MAX_ATTEMPTS:3}
+      backoff-base-ms: ${GW_AI_BACKOFF_BASE_MS:800}
     # 流水线/提示词/规则集版本必须落库（00 文档 ADR D-10、01 文档 risk_case）
     pipeline-version: ${GW_PIPELINE_VERSION:0.1.0}
     prompt-version: ${GW_PROMPT_VERSION:0.1.0}

@@ -44,6 +44,61 @@ public interface AiInferencePort {
     String generateCommunicationScript(ScriptRequest request);
 
     /**
+     * AI 复审：回答 AGENTS.md 第 7 条要求的三个必答问题。
+     *
+     * <p>默认返回 {@code null}，表示该实现不具备模型复审能力，调用方应回退到规则判定
+     * （按新版本锚点逐条比对）。用默认方法而不是强制实现，是为了让"有没有模型复审"
+     * 成为可判定的能力，而不是靠注释说明。
+     *
+     * @return 模型复审结论；{@code null} = 不支持
+     */
+    default RereviewAnswer rereview(RereviewRequest request) {
+        return null;
+    }
+
+    /**
+     * @param riskText      原风险原文
+     * @param baseAnchors   首次发现该风险的版本锚点
+     * @param targetAnchors 当前（整改后）版本锚点
+     * @param changeSummary 两版差异摘要，供模型聚焦改动区域
+     */
+    record RereviewRequest(String riskText, String riskType, String riskLevel,
+                           String originalLocation, String reviewScope,
+                           List<AnchorLine> baseAnchors, List<AnchorLine> targetAnchors,
+                           String changeSummary) {
+        public RereviewRequest {
+            baseAnchors = baseAnchors == null ? List.of() : List.copyOf(baseAnchors);
+            targetAnchors = targetAnchors == null ? List.of() : List.copyOf(targetAnchors);
+        }
+    }
+
+    /**
+     * @param originalResolved  原风险是否已解决
+     * @param remainingRisk     是否仍有剩余风险
+     * @param remainingEvidence 剩余风险的依据（命中的新版本原文）
+     * @param newRisks          本次修改新引入的风险；调用方应为它们新建关联 Risk Case
+     * @param summary           结论文本，可直接写入 review_record
+     * @param confidence        模型对本次复审结论的把握
+     */
+    record RereviewAnswer(boolean originalResolved, boolean remainingRisk,
+                          List<String> remainingEvidence, List<NewRisk> newRisks,
+                          String summary, double confidence) {
+        public RereviewAnswer {
+            remainingEvidence = remainingEvidence == null ? List.of() : List.copyOf(remainingEvidence);
+            newRisks = newRisks == null ? List.of() : List.copyOf(newRisks);
+        }
+    }
+
+    /**
+     * 复审发现的新增风险。
+     *
+     * @param anchorId 新版本文本锚点 ID；必须是 targetAnchors 里真实存在的，服务端会校验
+     */
+    record NewRisk(String anchorId, String text, String riskType,
+                   String riskLevel, String reason) {
+    }
+
+    /**
      * AI 法务助手：单条咨询（AGENTS.md 第 3 条）。
      *
      * <p>与上面的正式审核链路的区别：这里回答的是「这一句话有没有问题」这类零散问题，
