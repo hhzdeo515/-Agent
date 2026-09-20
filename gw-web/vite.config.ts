@@ -2,7 +2,16 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
+/**
+ * base 必须区分两种部署形态：
+ *   · 本地开发 / 独立域名部署 → '/'
+ *   · GitHub Pages 项目站点    → '/-Agent/'（仓库名子路径）
+ * 若 Pages 上仍用 '/'，所有静态资源会解析到域名根目录而 404。
+ */
+const isPages = process.env.DEPLOY_TARGET === 'pages'
+
 export default defineConfig({
+  base: isPages ? '/-Agent/' : '/',
   plugins: [vue()],
   resolve: {
     alias: {

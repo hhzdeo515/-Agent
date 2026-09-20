@@ -1,0 +1,70 @@
+name: Deploy Web to GitHub Pages
+
+# 只在前端或本工作流变更时触发，避免后端改动也跑一次前端构建
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gw-web/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一个部署，新推送取消进行中的旧任务
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 构建前端
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: gw-web/package-lock.json
+
+      - name: 安装依赖
+        working-directory: gw-web
+        run: npm ci
+
+      - name: 类型检查
+        working-directory: gw-web
+        run: npx vue-tsc --noEmit
+
+      - name: 构建（Pages 子路径）
+        working-directory: gw-web
+        env:
+          DEPLOY_TARGET: pages
+        run: npx vite build
+
+      # GitHub Pages 对未知路径返回 404。SPA 使用 history 路由，
+      # 直接访问 /-Agent/gasp 这类地址会 404，因此用 404.html 兜底重定向。
+      - name: SPA 路由兜底
+        working-directory: gw-web
+        run: cp dist/index.html dist/404.html
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: gw-web/dist
+
+  deploy:
+    name: 部署到 Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@v4
