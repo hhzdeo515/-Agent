@@ -157,11 +157,7 @@ const events = ref([
 
       <!-- 法务终审 -->
       <PanelCard title="法务终审">
-        <div class="gw-note gw-note--plain">
-          签名前请确认：原风险内容、新版本内容、差异、AI 复审结论与置信度。<br />
-          全量复审已被服务端拒绝——终审区不会退化为第二次全量初审。
-        </div>
-        <dl class="gw-kv" style="margin-top: var(--gw-s4)">
+        <dl class="gw-kv">
           <div class="gw-kv__row"><dt>复审范围</dt><dd>变化区域 + 必要上下文</dd></div>
           <div class="gw-kv__row"><dt>复审结论</dt><dd>2 条已解决 · 1 条仍存在</dd></div>
           <div class="gw-kv__row"><dt>签名人</dt><dd>林砚（法务审核）</dd></div>

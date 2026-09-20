@@ -120,20 +120,6 @@ const statusOf = (t: RiskRow['statusTone']) => `gw-status gw-status--${t}`
             <div class="gw-stat__label">风险未通过</div>
           </div>
         </div>
-
-        <div class="gw-note" style="margin-top: var(--gw-s4)">
-          通过率 = 初审通过物料数 ÷ 参与初审物料数。解析失败的 2 份不计入分母，单独列出。
-        </div>
-
-        <div class="gw-disclaimer" style="margin-top: var(--gw-s3)">
-          <svg class="gw-disclaimer__icon" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.4" />
-            <path d="M8 7.2v4M8 4.9v.9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-          </svg>
-          <p class="gw-disclaimer__text">
-            「初审通过」仅表示 AI 未发现明显风险，<strong>不等于法务最终批准</strong>。
-          </p>
-        </div>
       </PanelCard>
 
       <!-- 风险等级分布 -->
@@ -155,7 +141,6 @@ const statusOf = (t: RiskRow['statusTone']) => `gw-status gw-status--${t}`
             <span class="dist__num gw-mono">2</span>
           </li>
         </ul>
-        <p class="dist__tip">等级描述潜在影响；它与「置信度」「流程状态」是三个独立维度，不可互相换算。</p>
       </PanelCard>
 
       <!-- 风险卡片列表 -->
@@ -228,13 +213,6 @@ const statusOf = (t: RiskRow['statusTone']) => `gw-status gw-status--${t}`
   font-weight: 600;
   color: var(--gw-text);
   flex: none;
-}
-
-.dist__tip {
-  margin-top: var(--gw-s4);
-  font-size: var(--gw-fs-xs);
-  color: var(--gw-text-tertiary);
-  line-height: var(--gw-lh);
 }
 
 /* ── 风险卡片 ─────────────────────────────────────────────────────── */

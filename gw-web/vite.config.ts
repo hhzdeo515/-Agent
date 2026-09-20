@@ -21,6 +21,22 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '127.0.0.1',
+    /**
+     * 忽略编辑器原子写入产生的临时文件。
+     *
+     * 编辑器（含部分 IDE 与文件工具的原子保存）会先写 `.<name>.<pid>.<rand>.tmpdir/` 再重命名，
+     * Windows 上 Vite 的 FSWatcher 监视到这些临时目录时会抛 EBUSY，
+     * 且该错误会作为未捕获异常**直接终止 dev server 进程**（表现为页面突然白屏）。
+     */
+    watch: {
+      ignored: [
+        '**/.*.tmpdir/**',
+        '**/*.tmp',
+        '**/*.tmpdir/**',
+        '**/.git/**',
+        '**/node_modules/**',
+      ],
+    },
     // 后端已在 8080 运行；开发期直接代理，避免 CORS 与硬编码地址
     proxy: {
       '/api': {

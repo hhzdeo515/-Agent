@@ -101,7 +101,7 @@ const capabilities = [
         </ul>
       </PanelCard>
 
-      <!-- 边界说明：这是产品最容易产生误解的地方，必须显式写出来 -->
+      <!-- 边界说明 -->
       <PanelCard title="助手不做这些">
         <ul class="limits">
           <li>不创建正式审核任务</li>
@@ -109,18 +109,11 @@ const capabilities = [
           <li>不生成批次通过率，也不改变风险状态</li>
           <li>不执行终审、签名、批准或风险关闭</li>
         </ul>
-        <p class="limits__tip">
-          这些动作属于正式流程，需要由有权限的法务在接收区、反馈区、终审区完成。
-        </p>
       </PanelCard>
 
       <!-- 转正式任务的入口：预填充而非直接创建 -->
       <PanelCard title="转成正式审核">
-        <p class="promote__tip">
-          如果这次咨询涉及要对外发布的一批材料，建议转为正式审核任务。
-          我会把当前输入与结论带入接收区，<strong>由你确认后</strong>才创建任务。
-        </p>
-        <dl class="gw-kv" style="margin-top: var(--gw-s3)">
+        <dl class="gw-kv">
           <div class="gw-kv__row"><dt>将带入</dt><dd>本次输入内容与分析结论</dd></div>
           <div class="gw-kv__row"><dt>不会自动</dt><dd>创建任务、上传材料、启动初审</dd></div>
         </dl>
@@ -133,9 +126,6 @@ const capabilities = [
 
       <!-- 本次会话的临时附件 -->
       <PanelCard title="本次会话文件" hint="有有效期">
-        <p class="temp__tip">
-          助手内的文件仅用于本次咨询，到期自动清理，不会进入正式物料库。
-        </p>
         <ul class="gw-rows">
           <li class="gw-row">
             <div class="gw-row__main">
@@ -222,37 +212,5 @@ const capabilities = [
   height: 1.5px;
   border-radius: 1px;
   background: var(--gw-slate-400);
-}
-
-.limits__tip {
-  margin-top: var(--gw-s4);
-  font-size: var(--gw-fs-sm);
-  color: var(--gw-text-tertiary);
-  line-height: var(--gw-lh);
-  padding-top: var(--gw-s3);
-  border-top: 1px solid var(--gw-line-soft);
-}
-
-/* ── 转正式任务 ───────────────────────────────────────────────────── */
-.promote__tip {
-  font-size: var(--gw-fs-sm);
-  color: var(--gw-text-secondary);
-  line-height: var(--gw-lh);
-  padding: var(--gw-s3);
-  border-radius: var(--gw-r-sm);
-  background: var(--gw-accent-faint);
-}
-
-.promote__tip strong {
-  color: var(--gw-text);
-  font-weight: 600;
-}
-
-/* ── 临时文件 ─────────────────────────────────────────────────────── */
-.temp__tip {
-  font-size: var(--gw-fs-sm);
-  color: var(--gw-text-tertiary);
-  line-height: var(--gw-lh);
-  margin-bottom: var(--gw-s3);
 }
 </style>

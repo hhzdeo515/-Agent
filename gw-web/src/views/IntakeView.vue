@@ -152,9 +152,6 @@ const requirements = [
 
       <!-- 审核要求 -->
       <PanelCard title="审核要求" hint="未确认">
-        <p class="req__tip">
-          模板内容不会被自动当作正式要求。请勾选并确认后，才能启动 AI 初审。
-        </p>
         <ul class="req__list">
           <li v-for="r in requirements" :key="r.label" class="req__item">
             <span class="req__box" :class="{ 'is-on': r.on }" aria-hidden="true">
@@ -295,16 +292,6 @@ const requirements = [
 }
 
 /* ── 审核要求 ─────────────────────────────────────────────────────── */
-.req__tip {
-  font-size: var(--gw-fs-sm);
-  color: var(--gw-text-tertiary);
-  line-height: var(--gw-lh);
-  padding: var(--gw-s3);
-  background: var(--gw-accent-faint);
-  border-radius: var(--gw-r-sm);
-  margin-bottom: var(--gw-s3);
-}
-
 .req__list {
   display: flex;
   flex-direction: column;
