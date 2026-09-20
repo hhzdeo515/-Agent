@@ -367,7 +367,54 @@ $revoke = Call POST "/api/final-review/materials/$materialId/approvals/$approval
   @{ revokeReason = 'E2E：验证撤销批准链路' } $legalPerms
 Check "撤销批准" ($revoke.code -eq 0 -and $revoke.data.status -eq 'REVOKED') ($revoke | ConvertTo-Json -Compress)
 
-Write-Host "`n=== 15. 反向追溯 ===" -ForegroundColor Cyan
+Write-Host "`n=== 15. 设置：AI 配置读写与权限 ===" -ForegroundColor Cyan
+$adminPerms = $legalPerms + ',admin.config'
+
+# 权限：品牌方不该能看系统 AI 配置（模型型号属于运维信息）
+$cfgDeny = Call GET '/api/settings/ai' $null $brandPerms
+Check "无 admin.config 不能读 AI 配置" ($cfgDeny.__httpStatus -eq 403 -or $cfgDeny.code -eq 40301) ($cfgDeny | ConvertTo-Json -Compress)
+
+$cfg0 = Call GET '/api/settings/ai' $null $adminPerms
+Check "可读 AI 配置" ($cfg0.code -eq 0 -and $cfg0.data.models.text) ($cfg0 | ConvertTo-Json -Compress)
+$origModel = $cfg0.data.models.text
+$origKeyConfigured = $cfg0.data.apiKeyConfigured
+Write-Host "  provider=$($cfg0.data.provider) text=$origModel keyConfigured=$origKeyConfigured"
+
+# 只回掩码：哪怕调用方有 admin.config，也不该拿到完整 Key
+Check "API Key 不回显明文" (
+  -not $cfg0.data.apiKeyConfigured -or
+  ($cfg0.data.apiKeyHint -and $cfg0.data.apiKeyHint -match '\*')
+) ("hint=" + $cfg0.data.apiKeyHint)
+
+# 写入一项非敏感配置并确认立即生效
+$saveModel = Call PUT '/api/settings/ai' @{ textModel = 'qwen-max' } $adminPerms
+Check "保存模型型号立即生效" ($saveModel.code -eq 0 -and $saveModel.data.models.text -eq 'qwen-max') `
+  ("实际=" + $saveModel.data.models.text)
+
+# 清除该项应回落到环境变量默认值，而不是保留上一次的值
+$clearModel = Call PUT '/api/settings/ai' @{ textModel = $origModel } $adminPerms
+Check "恢复原模型型号" ($clearModel.code -eq 0 -and $clearModel.data.models.text -eq $origModel) `
+  ("实际=" + $clearModel.data.models.text)
+
+# 越权：品牌方不能改
+$saveDeny = Call PUT '/api/settings/ai' @{ textModel = 'qwen-turbo' } $brandPerms
+Check "无 admin.config 不能改 AI 配置" ($saveDeny.__httpStatus -eq 403 -or $saveDeny.code -eq 40301) ($saveDeny | ConvertTo-Json -Compress)
+
+Write-Host "`n=== 15b. 设置：个人信息 ===" -ForegroundColor Cyan
+$prof0 = Call GET '/api/settings/profile' $null $legalPerms
+Check "可读个人信息" ($prof0.code -eq 0 -and $prof0.data.username) ($prof0 | ConvertTo-Json -Compress)
+$origDisplay = $prof0.data.displayName
+$origDept = $prof0.data.dept
+Write-Host "  username=$($prof0.data.username) role=$($prof0.data.roleCodes) displayName=$origDisplay"
+
+$badName = Call PUT '/api/settings/profile' @{ displayName = '' } $legalPerms
+Check "空显示名被拒" ($badName.code -ne 0) ($badName | ConvertTo-Json -Compress)
+
+$prof1 = Call PUT '/api/settings/profile' @{ displayName = $origDisplay; dept = $origDept } $legalPerms
+Check "可改本人信息（且只改显示名与部门）" ($prof1.code -eq 0 -and $prof1.data.username -eq $prof0.data.username) `
+  ($prof1 | ConvertTo-Json -Compress)
+
+Write-Host "`n=== 16. 反向追溯 ===" -ForegroundColor Cyan
 $records = Call GET "/api/feedback/risks/$riskId/records" $null $legalPerms
 Check "风险处理轨迹完整" ($records.code -eq 0 -and $records.data.Count -ge 5)
 Write-Host "  审核记录数=$($records.data.Count)"
